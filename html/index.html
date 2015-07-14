@@ -1,0 +1,215 @@
+<html>
+<head>
+    <title>pixi.js -- Part 3 -- Highlight of the day</title>
+    <style>
+    body {background-color: #2C5D6F;}
+    .flex-container {    
+        display        : flex;
+        align-items    : center;
+        justify-content: center;
+    }
+
+    .vertical {
+        flex-direction: column;
+    }
+
+    .radio-die       {border-radius: 100px; border: 2px solid red;}
+    .radio-no-change {border-radius: 100px; border: 2px solid yellow;}
+    .radio-live      {border-radius: 100px; border: 2px solid green;}
+    </style>
+    <script src="../lib/pixi.js"></script>
+
+    <script src="../js/HexUtil.js"></script>
+    <script src="../js/HexMath.js"></script>
+    <script src="../js/HexColor.js"></script>
+    <script src="../js/HexCell.js"></script>
+    <script src="../js/HexGrid.js"></script>
+    <script src="../js/HexLife.js"></script>
+</head>
+<body>
+    <div id='main' class='flex-container vertical'>
+        <div class='flex-container'>
+            <div class='flex-container vertical'>
+                1
+                <input type="radio" class="radio-die"       name="1" value="0">
+                <input type="radio" class="radio-no-change" name="1" value="1" checked>
+                <input type="radio" class="radio-live"      name="1" value="2">
+            </div>
+            <div class='flex-container vertical'>
+                2
+                <input type="radio" class="radio-die"       name="2" value="0">
+                <input type="radio" class="radio-no-change" name="2" value="1" checked>
+                <input type="radio" class="radio-live"      name="2" value="2">
+            </div>
+            <div class='flex-container vertical'>
+                3
+                <input type="radio" class="radio-die"       name="3" value="0">
+                <input type="radio" class="radio-no-change" name="3" value="1" checked>
+                <input type="radio" class="radio-live"      name="3" value="2">
+            </div>
+            <div class='flex-container vertical'>
+                4
+                <input type="radio" class="radio-die"       name="4" value="0">
+                <input type="radio" class="radio-no-change" name="4" value="1" checked>
+                <input type="radio" class="radio-live"      name="4" value="2">
+            </div>
+            <div class='flex-container vertical'>
+                5
+                <input type="radio" class="radio-die"       name="5" value="0">
+                <input type="radio" class="radio-no-change" name="5" value="1" checked>
+                <input type="radio" class="radio-live"      name="5" value="2">
+            </div>
+            <div class='flex-container vertical'>
+                6
+                <input type="radio" class="radio-die"       name="6" value="0">
+                <input type="radio" class="radio-no-change" name="6" value="1" checked>
+                <input type="radio" class="radio-live"      name="6" value="2">
+            </div>
+            <div class="flex-container vertical" style="margin-left:25px;">
+                <input id='btn-clear' type="button" name="Clear"  value="Clear">
+                <input id='btn-step'  type="button" name="Step"  value="Step">
+                <input id='btn-start' type="button" name="Start" value="Start">
+                <input id='btn-stop'  type="button" name="Stop"  value="Stop">
+            </div>
+        </div>
+    </div>
+    <script>
+
+    // Define the hex cell data
+    var cos_60 = 0.5
+    var sin_60 = 0.86602540378
+    var hexPoints = [-1, 0, -cos_60, -sin_60, cos_60, -sin_60, 1,0, cos_60, sin_60, -cos_60, sin_60];
+    var hexShape    = new PIXI.Polygon(hexPoints);
+
+    // Seriously!?
+    var hexOutlinePoints = hexPoints.map( function(val){return val-0.5;} );
+    var hexOutlineShape    = new PIXI.Polygon(hexOutlinePoints);
+
+    function hexesInCanvas () {
+        var sizePixels = {
+            w: Configuration.view.size.w
+                - Configuration.view.padding.left
+                - Configuration.view.padding.right,
+            h: Configuration.view.size.h
+                - Configuration.view.padding.top
+                - Configuration.view.padding.bottom
+        }
+        var hexSide = {
+            w: Configuration.grid.scale.x * (2 - 0.5),
+            h: Configuration.grid.scale.y * 2 * sin_60
+        }
+        var w = sizePixels.w/hexSide.w;
+        var h = sizePixels.h/hexSide.h;
+        return {w:Math.ceil(w), h:Math.ceil(h)};
+    }
+
+    // Color information about the grid and board and what not
+    var colorPalette = new HexColor.HexPalette( HexColor.pastell, 1 );
+    var Configuration = {
+        view: {
+            size    : { w:320, h:320 },
+            padding : {
+                        top: 50, 
+                        right: 40,
+                        bottom: 40,
+                        left: 50
+                       },
+        },
+
+        grid: {
+            lineColor: HexColor.desaturate(HexColor.invertValue(colorPalette.colors[0])),
+            lineWidth: 0.1,
+
+            position : {
+                            x: 50,
+                            y: 50
+                        },
+            scale    : {x:15, y:15},
+            // size     : {w:30, h:20},
+            size     : hexesInCanvas
+        },
+    };
+
+    // Set up the PIXI renderer
+    var renderer = new PIXI.WebGLRenderer   (
+                                                Configuration.view.size.w,
+                                                Configuration.view.size.h, 
+                                                {
+                                                    transparent : true,
+                                                    antialias   : true
+                                                }
+                                            );
+    document.getElementById('main').insertBefore(renderer.view, document.getElementById('main').firstChild);
+
+    renderer.view.onmouseup = function(ev) {
+        var grid = life.activeGrid;
+        // console.log('mouseup')
+        // console.log(ev);
+        var mousePosition = {x:ev.offsetX,y:ev.offsetY}
+        // console.log(mousePosition)
+        var offsetCoord = grid._toOffsetCoordinates( mousePosition );
+        // console.log('renderer.view.onmouseup - Cube   coordinates', grid._toCubeCoordinates(offsetCoord));
+        // console.log('renderer.view.onmouseup - Offset coordinates', grid._toOffsetCoordinates(offsetCoord));
+        var cell         = grid.getCell(offsetCoord);
+        // cell.color = colorPalette.random();
+        
+        var circle = HexMath.hexagon(offsetCoord, 0, grid);
+        // circle.map( function(val){console.log(val)} );
+        // circle.map( function(val){console.log(grid.getCell(val))} );
+        circle.map( function(val){grid.getCell(val).highlight();} );
+        circle.map( function(val){grid.drawCell(grid.getCell(val));} );
+
+        // cell.highlight();
+        // console.log(cell);
+        // grid.drawCell(cell);
+        grid.renderWith(renderer);
+    }
+    // renderer.view.onmousemove = function(ev) {
+    //     console.log('mousemove');
+    //     console.log(ev);
+    //     grid._graphics.worldTransform.translate( ev.movementX*100, ev.movementY*100 );
+    // }
+
+    var grid = new HexGrid  (
+                                Configuration.grid.position,
+                                Configuration.grid.size() ,
+                                Configuration.grid.scale,
+                                colorPalette
+                            );
+    var grid2 = new HexGrid  (
+                                Configuration.grid.position,
+                                Configuration.grid.size() ,
+                                Configuration.grid.scale,
+                                colorPalette
+                            );
+    // grid = new HexCell({x:100, y:200}, {x:100, y:100}, 0x0000ff);
+    grid.draw()
+    grid.renderWith(renderer);
+
+    var life = new HexLife.Game(grid, grid2);
+
+
+    // Kick-start the rendering process
+    animate();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        if (life.isStarted) { life.step(1); }
+    }
+
+    document.getElementById('btn-clear').onclick = function () {
+        life.clear();
+    };
+    document.getElementById('btn-start').onclick = function () {
+        life.start();
+    };
+    document.getElementById('btn-stop').onclick = function () {
+        life.stop();
+    };
+    document.getElementById('btn-step').onclick = function () {
+        life.step();
+    };
+
+    </script>
+    </body>
+</html>

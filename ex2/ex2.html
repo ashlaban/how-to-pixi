@@ -1,0 +1,138 @@
+<html>
+<head>
+    <title>pixi.js -- Part 2 -- Grinding a grid</title>
+    <style>body {background-color: #2C5D6F;}</style>
+    <script src="../lib/pixi.js"></script>
+</head>
+<body>
+    <script>
+
+    // Define the hex cell data
+    var cos_60 = 0.5
+    var sin_60 = 0.86602540378
+    var hexPoints = [-1, 0, -cos_60, -sin_60, cos_60, -sin_60, 1,0, cos_60, sin_60, -cos_60, sin_60];
+    var hexShape    = new PIXI.Polygon(hexPoints);
+
+    function getRandomPastellColor() {
+        function HSVtoRGB(h, s, v) {
+            // Taken from:
+            // http://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately
+            var r, g, b, i, f, p, q, t;
+            if (h && s === undefined && v === undefined) {
+                s = h.s, v = h.v, h = h.h;
+            }
+            i = Math.floor(h * 6);
+            f = h * 6 - i;
+            p = v * (1 - s);
+            q = v * (1 - f * s);
+            t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r = v, g = t, b = p; break;
+                case 1: r = q, g = v, b = p; break;
+                case 2: r = p, g = v, b = t; break;
+                case 3: r = p, g = q, b = v; break;
+                case 4: r = t, g = p, b = v; break;
+                case 5: r = v, g = p, b = q; break;
+            }
+            return {
+                r: Math.floor(r * 255),
+                g: Math.floor(g * 255),
+                b: Math.floor(b * 255)
+            };
+        }
+
+        var h = Math.random()
+        var s = 0.45 + (Math.random() - 0.5) * 0.25
+        var v = 0.75 + (Math.random() - 0.5) * 0.25
+
+        var color = HSVtoRGB( h, s, v );
+        return color.r+color.g*256+color.b*256*256;
+    }
+
+    function HexCell( position, scale, color) {
+        this._graphics = new PIXI.Graphics();
+        this._graphics.position.x = position.x
+        this._graphics.position.y = position.y
+        this._graphics.scale.x = scale.x;
+        this._graphics.scale.y = scale.y;
+        this.color = color;
+    }
+
+    HexCell.prototype.draw = function () {
+        this._graphics.beginFill(this.color);
+        this._graphics.drawShape(hexShape);
+        this._graphics.endFill();
+    }
+
+    HexCell.prototype.renderWith = function ( renderer ) {
+        renderer.render(this._graphics);
+    }
+
+    function HexGrid( position, size, scale ) {
+        this._graphics = new PIXI.Graphics()
+        this._graphics.position.x = position.x;
+        this._graphics.position.y = position.y;
+        this._graphics.scale.x = scale.x;
+        this._graphics.scale.y = scale.y;
+
+        this.size = {};
+        this.size.w = size.w;
+        this.size.h = size.h;
+
+        this._graphics = new PIXI.Graphics();
+
+        this.cells = []
+        for (var ix = 0; ix < this.size.w; ++ix) {
+            for (var iy = 0; iy < this.size.h; ++iy) {
+                
+                var xoffset, yoffset;
+                if (ix % 2 == 0) {
+                    // Even
+                    xoffset = 1+cos_60;
+                    yoffset = 0;
+                } else {
+                    // Odd
+                    xoffset = 1+cos_60;
+                    yoffset = sin_60;
+                }
+
+                var position = {x: ix*xoffset*scale.x, y: (iy*2*sin_60+yoffset)*scale.y};
+                var color    = getRandomPastellColor();
+                var cell     = new HexCell(position, scale, color);
+                this.cells.push(cell)
+            }
+        }
+    }
+
+    HexGrid.prototype.draw = function () {
+        // TODO: clear first
+        for (var key in this.cells) {
+            var obj = this.cells[key];
+            obj.draw()
+            this._graphics.addChild(obj._graphics)
+        }
+    }
+
+    HexGrid.prototype.renderWith = function ( renderer ) {
+        renderer.render(this._graphics);
+    }
+
+    
+    // Set up the PIXI renderer
+    var renderer = new PIXI.WebGLRenderer(800, 600, {transparent:false});
+    document.body.appendChild(renderer.view);
+
+    var grid = new HexGrid({x:0, y:0}, {w:60, h:40}, {x:10, y:10});
+    grid.draw()
+
+
+    // Kick-start the rendering process
+    animate();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        grid.renderWith(renderer);
+    }
+    </script>
+    </body>
+</html>

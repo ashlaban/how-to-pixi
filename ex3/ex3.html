@@ -1,0 +1,111 @@
+<html>
+<head>
+    <title>pixi.js -- Part 3 -- Highlight of the day</title>
+    <style>body {background-color: #2C5D6F;}</style>
+    <script src="../lib/pixi.js"></script>
+
+    <script src="./js/HexColor.js"></script>
+    <script src="./js/HexGrid.js"></script>
+</head>
+<body>
+    <script>
+
+    // Define the hex cell data
+    var cos_60 = 0.5
+    var sin_60 = 0.86602540378
+    var hexPoints = [-1, 0, -cos_60, -sin_60, cos_60, -sin_60, 1,0, cos_60, sin_60, -cos_60, sin_60];
+    var hexShape    = new PIXI.Polygon(hexPoints);
+
+    var colorPalette = new HexColor.HexPalette( HexColor.pastell, 5 );
+
+    function HexCell( position, scale, color) {
+        this._graphics = new PIXI.Graphics();
+        this._graphics.position.x = position.x
+        this._graphics.position.y = position.y
+        this._graphics.scale.x = scale.x;
+        this._graphics.scale.y = scale.y;
+        this.color = color;
+
+        this._colorStack = [];
+
+        this.isHighlighted = false;
+    }
+
+    HexCell.prototype._pushColor = function (newColor) {
+        this._colorStack.push(this.color);
+        this.color = newColor;
+    }
+    HexCell.prototype._popColor = function () {
+        if (this._colorStack) {
+            this.color = this._colorStack.pop()
+        }
+    }
+
+    HexCell.prototype.highlight = function (doHighlight) {
+        if (doHighlight === undefined) {
+            this.isHighlighted = !this.isHighlighted;
+        } else if (doHighlight) {
+            this.isHighlighted = true;
+        } else {
+            this.isHighlighted = false;
+        }
+        this.draw()
+        // TODO: Signal dirty cell
+    }
+
+    HexCell.prototype.draw = function () {
+        var color;
+        if (this.isHighlighted) {
+            color = HexColor.brighten(this.color);
+        } else {
+            color = this.color;
+        }
+        this._graphics.beginFill(color);
+        this._graphics.drawShape(hexShape);
+        this._graphics.endFill();
+    }
+
+    HexCell.prototype.renderWith = function ( renderer ) {
+        renderer.render(this._graphics);
+    }
+
+    // Set up the PIXI renderer
+    var renderer = new PIXI.WebGLRenderer(800, 600, {transparent:false});
+    document.body.appendChild(renderer.view);
+
+    // interactionManager = new PIXI.interaction.InteractionManager(renderer);
+    // interactionManager.onMouseUp = function() {
+    renderer.view.onmouseup = function(ev) {
+        console.log('mouseup')
+        console.log(ev);
+        var mousePosition = {x:ev.offsetX,y:ev.offsetY}
+        console.log(mousePosition)
+        var offsetCoord = grid._toOffsetCoordinates( mousePosition );
+        console.log(offsetCoord);
+        var cell         = grid.getCell(offsetCoord);
+        // cell.color = colorPalette.random();
+        cell.highlight();
+        console.log(cell);
+        grid.drawCell(cell);
+        grid.renderWith(renderer);
+    }
+    // renderer.view.onmousemove = function(ev) {
+    //     console.log('mousemove');
+    //     console.log(ev);
+    //     grid._graphics.worldTransform.translate( ev.movementX*100, ev.movementY*100 );
+    // }
+
+    var grid = new HexGrid({x:100, y:100}, {w:20, h:15}, {x:30, y:30}, colorPalette);
+    grid.draw()
+    grid.renderWith(renderer);
+
+
+    // Kick-start the rendering process
+    animate();
+
+    function animate() {
+        requestAnimationFrame(animate);
+    }
+    </script>
+    </body>
+</html>

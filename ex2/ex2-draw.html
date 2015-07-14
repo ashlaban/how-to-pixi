@@ -1,0 +1,142 @@
+<html>
+<head>
+    <title>pixi.js -- Part 2 -- Grinding a grid</title>
+    <style>body {background-color: #2C5D6F;}</style>
+    <script src="../lib/pixi.js"></script>
+    <script src="../lib/fpsmeter.min.js"></script>
+</head>
+<body>
+    <script>
+
+    var meter = new FPSMeter();
+
+    // Define the hex cell data
+    var cos_60 = 0.5
+    var sin_60 = 0.86602540378
+    var hexPoints = [-1, 0, -cos_60, -sin_60, cos_60, -sin_60, 1,0, cos_60, sin_60, -cos_60, sin_60];
+    var hexShape    = new PIXI.Polygon(hexPoints);
+
+    function HexCell( position, scale, color) {
+        this._graphics = new PIXI.Graphics();
+        this._graphics.position.x = position.x
+        this._graphics.position.y = position.y
+        this._graphics.scale.x = scale.x;
+        this._graphics.scale.y = scale.y;
+        this.color = color;
+    }
+
+    HexCell.prototype.draw = function () {
+        this._graphics.beginFill(this.color);
+        this._graphics.drawShape(hexShape);
+        this._graphics.endFill();
+    }
+
+    HexCell.prototype.renderWith = function ( renderer ) {
+        renderer.render(this._graphics);
+    }
+
+    function HexGrid( position, size, scale ) {
+        this._graphics = new PIXI.Graphics()
+        this._graphics.position.x = position.x;
+        this._graphics.position.y = position.y;
+        this._graphics.scale.x = scale.x;
+        this._graphics.scale.y = scale.y;
+
+        this.size = {};
+        this.size.w = size.w;
+        this.size.h = size.h;
+
+        this._graphics = new PIXI.Graphics();
+
+        this.cells = []
+        for (var ix = 0; ix < this.size.w; ++ix) {
+            for (var iy = 0; iy < this.size.h; ++iy) {
+                
+                var xoffset, yoffset;
+                if (ix % 2 == 0) {
+                    // Even
+                    xoffset = 1+cos_60;
+                    yoffset = 0;
+                } else {
+                    // Odd
+                    xoffset = 1+cos_60;
+                    yoffset = sin_60;
+                }
+
+                var position = {x: ix*xoffset*scale.x, y: (iy*2*sin_60+yoffset)*scale.y};
+                var color    = ix*4+iy*7*256;
+                var cell     = new HexCell(position, scale, color);
+                this.cells.push(cell)
+            }
+        }
+    }
+
+    function HexGrid2( position, size, scale ) {
+        this._graphics = new PIXI.Graphics()
+        this._graphics.position.x = position.x;
+        this._graphics.position.y = position.y;
+        this._graphics.scale.x = scale.x;
+        this._graphics.scale.y = scale.y;
+
+        this.size = {};
+        this.size.w = size.w;
+        this.size.h = size.h;
+
+        this._graphics = new PIXI.Graphics();
+
+        this.cells = []
+        for (var ix = 0; ix < this.size.w; ++ix) {
+            for (var iy = 0; iy < this.size.h; ++iy) {
+                
+                var xoffset, yoffset;
+                if (ix % 2 == 0) {
+                    // Even
+                    xoffset = 1+cos_60;
+                    yoffset = 0;
+                } else {
+                    // Odd
+                    xoffset = 1+cos_60;
+                    yoffset = sin_60;
+                }
+
+                var position = {x: ix*xoffset*scale.x, y: (iy*2*sin_60+yoffset)*scale.y};
+                var color    = ix*4+iy*7*256;
+                var cell     = new HexCell(position, scale, color);
+                
+            }
+        }
+    }
+
+    HexGrid.prototype.draw = function () {
+        // TODO: clear first
+        for (var key in this.cells) {
+            var obj = this.cells[key];
+            obj.draw()
+            this._graphics.addChild(obj._graphics)
+        }
+    }
+
+    HexGrid.prototype.renderWith = function ( renderer ) {
+        renderer.render(this._graphics);
+    }
+
+    
+    // Set up the PIXI renderer
+    var renderer = new PIXI.WebGLRenderer(800, 600, {transparent:false});
+    document.body.appendChild(renderer.view);
+
+    var grid = new HexGrid({x:100, y:100}, {w:60, h:40}, {x:10, y:10});
+    grid.draw()
+
+
+    // Kick-start the rendering process
+    animate();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        grid.renderWith(renderer);
+        meter.tick();
+    }
+    </script>
+    </body>
+</html>
