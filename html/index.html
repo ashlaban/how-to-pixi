@@ -1,8 +1,39 @@
 <html>
 <head>
-    <title>pixi.js -- Part 3 -- Highlight of the day</title>
+    <title>Hexway's Game of Life</title>
+
+    <link rel="stylesheet" type="text/css" href="../lib/bootstrap.min.css">
+
     <style>
     body {background-color: #2C5D6F;}
+    #main-content {
+        padding-left: 50px;
+        padding-right: 50px;
+        border-radius: 10px;
+        background-color: #3C6D7F;
+    }
+    #side-panel {
+        /*padding-left: 50px;
+        padding-right: 50px;*/
+        border-radius: 10px;
+        background-color: #4C7D8F;
+    }
+    #control-box {
+        border-radius: 10px 10px 0px 0px;
+        border-width : 1px;
+        border-style : solid;
+        border-color : #000000;
+    }
+    #rule-box {
+        width: 100%;
+        border-radius: 0px 0px 10px 10px;
+        border-width : 1px;
+        border-style : solid;
+        border-color : #000000;
+
+        padding-bottom: 10px;
+    }
+
     .flex-container {    
         display        : flex;
         align-items    : center;
@@ -13,11 +44,40 @@
         flex-direction: column;
     }
 
-    .radio-die       {border-radius: 100px; border: 2px solid red;}
+    /*.radio-die       {border-radius: 100px; border: 2px solid red;}
     .radio-no-change {border-radius: 100px; border: 2px solid yellow;}
-    .radio-live      {border-radius: 100px; border: 2px solid green;}
+    .radio-live      {border-radius: 100px; border: 2px solid green;}*/
+
+    /*.btn {
+        width: 70px;
+        height: 25px;
+        margin-top   : 5px;
+        margin-bottom: 5px;
+        margin-left : 2.5px;
+        margin-right: 2.5px;
+        background-color : #eeeeee;
+        border-color     : #eeeeee;
+        border-radius: 5px;
+    }*/
+
+    #progressbar {
+        visibility: hidden;
+        width :300px;
+    }
+
+    .mirror {
+        transform: scale(-1, 1);
+    }
+
+    #footer {
+        height: 30px;
+    }
+
+
     </style>
     <script src="../lib/pixi.js"></script>
+    <script src="../lib/fpsmeter.min.js"></script>
+    <script src="../lib/progressbar.js"></script>
 
     <script src="../js/HexUtil.js"></script>
     <script src="../js/HexMath.js"></script>
@@ -28,50 +88,72 @@
 </head>
 <body>
     <div id='main' class='flex-container vertical'>
+    <div id='main-content'>
+        <h1 style='margin: 10px 10px 10px 10px;'>Hexway's Game of Life</h1>
         <div class='flex-container'>
-            <div class='flex-container vertical'>
-                1
-                <input type="radio" class="radio-die"       name="1" value="0">
-                <input type="radio" class="radio-no-change" name="1" value="1" checked>
-                <input type="radio" class="radio-live"      name="1" value="2">
-            </div>
-            <div class='flex-container vertical'>
-                2
-                <input type="radio" class="radio-die"       name="2" value="0">
-                <input type="radio" class="radio-no-change" name="2" value="1" checked>
-                <input type="radio" class="radio-live"      name="2" value="2">
-            </div>
-            <div class='flex-container vertical'>
-                3
-                <input type="radio" class="radio-die"       name="3" value="0">
-                <input type="radio" class="radio-no-change" name="3" value="1" checked>
-                <input type="radio" class="radio-live"      name="3" value="2">
-            </div>
-            <div class='flex-container vertical'>
-                4
-                <input type="radio" class="radio-die"       name="4" value="0">
-                <input type="radio" class="radio-no-change" name="4" value="1" checked>
-                <input type="radio" class="radio-live"      name="4" value="2">
-            </div>
-            <div class='flex-container vertical'>
-                5
-                <input type="radio" class="radio-die"       name="5" value="0">
-                <input type="radio" class="radio-no-change" name="5" value="1" checked>
-                <input type="radio" class="radio-live"      name="5" value="2">
-            </div>
-            <div class='flex-container vertical'>
-                6
-                <input type="radio" class="radio-die"       name="6" value="0">
-                <input type="radio" class="radio-no-change" name="6" value="1" checked>
-                <input type="radio" class="radio-live"      name="6" value="2">
-            </div>
-            <div class="flex-container vertical" style="margin-left:25px;">
-                <input id='btn-clear' type="button" name="Clear"  value="Clear">
-                <input id='btn-step'  type="button" name="Step"  value="Step">
-                <input id='btn-start' type="button" name="Start" value="Start">
-                <input id='btn-stop'  type="button" name="Stop"  value="Stop">
+            <div id="canvas-wrapper"></div>
+            <div id='side-panel' class='flex-container vertical'>
+                <div id='control-box' class='flex-container vertical'>
+                    <div id='progressbar' class=''></div>
+                    <span id='running-indicator' class='btn btn-danger'>Simulation stopped</span>
+                    <div class="flex-container btn-group" style='margin-top:10px;'>
+                        <input id='btn-step'  class='btn btn-primary' type="button" value="Step">
+                        <input id='btn-start' class='btn btn-primary' type="button" value="Start">
+                        <input id='btn-stop'  class='btn btn-primary' type="button" value="Stop">
+                        <input id='btn-clear' class='btn btn-primary' type="button" value="Clear">
+                    </div>
+                    <div class="flex-container input-group btn-group" style='margin-bottom:10px;'>
+                        <input id='btn-fill'  class='btn btn-primary' type="button" value="Fill">
+                        <input id='text-fill' type="text" class='form-control' value="0.5">
+                    </div>
+                </div>
+                <div id='rule-box' class='flex-container vertical'>
+                    <h3>Rule configuration</h3>
+                    <div class='flex-container'>
+                        <div class='flex-container vertical'>
+                            0
+                            <input type="radio" class="rule radio-die"       name="0" value="0" checked>
+                            <input type="radio" class="rule radio-no-change" name="0" value="1" >
+                            <input type="radio" class="rule radio-live"      name="0" value="2">
+                        </div>
+                        <div class='flex-container vertical'>
+                            1
+                            <input type="radio" class="rule radio-die"       name="1" value="0" checked>
+                            <input type="radio" class="rule radio-no-change" name="1" value="1">
+                            <input type="radio" class="rule radio-live"      name="1" value="2">
+                        </div>
+                        <div class='flex-container vertical'>
+                            2
+                            <input type="radio" class="rule radio-die"       name="2" value="0">
+                            <input type="radio" class="rule radio-no-change" name="2" value="1" checked>
+                            <input type="radio" class="rule radio-live"      name="2" value="2">
+                        </div>
+                        <div class='flex-container vertical'>
+                            3
+                            <input type="radio" class="rule radio-die"       name="3" value="0">
+                            <input type="radio" class="rule radio-no-change" name="3" value="1">
+                            <input type="radio" class="rule radio-live"      name="3" value="2" checked>
+                        </div>
+                        <div class='flex-container vertical'>
+                            4
+                            <input type="radio" class="rule radio-die"       name="4" value="0" checked>
+                            <input type="radio" class="rule radio-no-change" name="4" value="1">
+                            <input type="radio" class="rule radio-live"      name="4" value="2">
+                        </div>
+                        <div class='flex-container vertical'>
+                            5
+                            <input type="radio" class="rule radio-die"       name="5" value="0" checked>
+                            <input type="radio" class="rule radio-no-change" name="5" value="1">
+                            <input type="radio" class="rule radio-live"      name="5" value="2">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+        <h2>Explanation</h2>
+        <p>This is the classical Game of Life but run on a heaxgonal grid instead of the usual square.</p>
+        <div id='footer'></div>
+    </div>
     </div>
     <script>
 
@@ -109,10 +191,10 @@
         view: {
             size    : { w:320, h:320 },
             padding : {
-                        top: 50, 
-                        right: 40,
-                        bottom: 40,
-                        left: 50
+                        top: 31*sin_60, 
+                        right: 16,
+                        bottom: 31*sin_60,
+                        left: 16
                        },
         },
 
@@ -121,12 +203,15 @@
             lineWidth: 0.1,
 
             position : {
-                            x: 50,
-                            y: 50
+                            x: 25,
+                            y: 40
                         },
             scale    : {x:15, y:15},
             // size     : {w:30, h:20},
             size     : hexesInCanvas
+        },
+        life: {
+            stepsPerSecond: 2,
         },
     };
 
@@ -139,7 +224,7 @@
                                                     antialias   : true
                                                 }
                                             );
-    document.getElementById('main').insertBefore(renderer.view, document.getElementById('main').firstChild);
+    document.getElementById('canvas-wrapper').appendChild(renderer.view);
 
     renderer.view.onmouseup = function(ev) {
         var grid = life.activeGrid;
@@ -188,26 +273,49 @@
 
     var life = new HexLife.Game(grid, grid2);
 
+    // var meter = new FPSMeter();
+    var line  = new ProgressBar.Line('#progressbar', {color: '#EEEEEE', strokeWidth: 2.0});
 
     // Kick-start the rendering process
     animate();
 
     function animate() {
         requestAnimationFrame(animate);
-        if (life.isStarted) { life.step(1); }
+        // meter.tick();
+        if (life.isStarted) { life.step(Configuration.life.stepsPerSecond); }
     }
 
     document.getElementById('btn-clear').onclick = function () {
         life.clear();
     };
     document.getElementById('btn-start').onclick = function () {
+        document.getElementById('running-indicator').innerHTML = 'Simulation running';
+        document.getElementById('running-indicator').className = 'btn btn-success';
         life.start();
     };
     document.getElementById('btn-stop').onclick = function () {
+        document.getElementById('running-indicator').innerHTML = 'Simulation stopped';
+        document.getElementById('running-indicator').className = 'btn btn-danger';
         life.stop();
     };
     document.getElementById('btn-step').onclick = function () {
         life.step();
+    };
+
+    document.getElementById('btn-fill').onclick = function () {
+        var fraction = document.getElementById('text-fill').value;
+        fraction = Number(fraction);
+        life.fillRandom( fraction );
+    };
+
+    var radioButtons = document.getElementsByClassName('rule');
+    for (var i = 0; i < radioButtons.length; ++i) {
+        radioButtons[i].onclick = function () {
+            var numNeighbours = Number(this.name);
+            var rule          = Number(this.value);
+            life.rules[numNeighbours] = rule;
+            console.log(life.rules)
+        };
     };
 
     </script>

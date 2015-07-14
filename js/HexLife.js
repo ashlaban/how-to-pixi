@@ -5,12 +5,11 @@ var HexLife = function () {
 	function defaultRules() {
 		/* 
 		 * Default rules
-		 * A cell dies from loniness when it has no neighbors and from being 
-		 * over-crowded when it has six neighbors. A cell is content with one,
-		 * two or five neighbors. If a cell has three or four neighbors it is
-		 * so happy it produces offspring.
+		 * A cell dies from lonliness with 0 and 1 neighbours, it dies from
+		 * being over-crowded with 4 and 5 neighbours. If a dead cell has three
+		 * neighbors it comes alive.
 		 */
-		return {0:0, 1:0, 2:1, 3:2, 4:2, 5:1, 6:0};
+		return {0:0, 1:0, 2:1, 3:2, 4:0, 5:0};
 	}
 
 	function Game (grid1, grid2) {
@@ -63,6 +62,18 @@ var HexLife = function () {
 		this.state ^= 1;
 	}
 
+	Game.prototype.fillRandom = function (fraction) {
+		for (var i = 0; i < this.passiveGrid.size.w; ++i) {
+			for (var j = 0; j < this.passiveGrid.size.h; ++j) {
+				if (Math.random() < fraction) {
+					this.activeGrid.getCell({i:i,j:j}).highlight();
+				}
+			}
+		}
+		this.activeGrid.draw();
+		this.activeGrid.renderWith(renderer);
+	}
+
 	Game.prototype.logic = function (sum, cell, prevState) {
 		var rule = this.rules[sum];
 		switch (rule) {
@@ -112,6 +123,15 @@ var HexLife = function () {
 				this.logic(sum, passiveCell, prevState);
 			};	
 		};
+
+		var target = 1.0;
+		line.set(0.0);
+		line.animate(target,
+				{
+					duration: 1000.0/stepsPerSecond - 500,
+				 	easing  : 'easeOut',
+				}
+			);
 
 		this.switchActiveGrid();
 		this.activeGrid.draw();
