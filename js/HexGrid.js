@@ -273,8 +273,8 @@ HexGrid.prototype.drawCell = function ( cell ) {
 HexGrid.prototype.getCell = function ( coordinate ) {
     var offsetCoord = this._toOffsetCoordinates(coordinate);
 
-    if (offsetCoord.i < 0 || offsetCoord.i > this.size.w) {return;}
-    if (offsetCoord.j < 0 || offsetCoord.j > this.size.h) {return;}
+    if (offsetCoord.i < 0 || offsetCoord.i > this.size.w) {return null;}
+    if (offsetCoord.j < 0 || offsetCoord.j > this.size.h) {return null;}
 
     var index = offsetCoord.i + offsetCoord.j * this.size.w;
     

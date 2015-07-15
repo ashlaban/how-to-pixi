@@ -46,6 +46,7 @@ HexCell.prototype.draw = function () {
         color = this.color;
     }
 
+    this._graphics.clear(); // Important, otherwise mem-consumption will explode!
     this._graphics.beginFill(color);
     this._graphics.drawShape(HexMath.hexShape);        
     this._graphics.endFill();
