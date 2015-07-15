@@ -25,102 +25,118 @@ var HexLife = function () {
 		this.previousTime = -1;
 		this.currentTime  = -1;
 
-		this.state = 0;
-		this.grid1 = new HexGrid( this.conf.grid );
-    	this.grid2 = new HexGrid( this.conf.grid );
-		this.activeGrid  = this.grid1;
-		this.passiveGrid = this.grid2;
+		var arraySize = this.conf.grid.size.w*this.conf.grid.size.h;
+		this.model = {
+			state: 0,
+			0: Array.apply(null, Array(arraySize)).map(Boolean,0),
+			1: Array.apply(null, Array(arraySize)).map(Boolean,0)
+		}
+
+		this.grid = new HexGrid( this.conf.grid );
 
 		this.rules = defaultRules();
 
 		this.clear();
+		this.drawActiveModel();
 
 		// Idiotic function declarations...
 		var onmouseup = function (ev) {
-			var grid = self.activeGrid;
+			if (isDrag) {isDrag = false; return;}
+			var grid = self.grid;
 	        var mousePosition = {x:ev.offsetX,y:ev.offsetY}
 	        var offsetCoord = grid._toOffsetCoordinates( mousePosition );
 	        // console.log('renderer.view.onmouseup - Cube   coordinates', grid._toCubeCoordinates(offsetCoord));
 	        // console.log('renderer.view.onmouseup - Offset coordinates', grid._toOffsetCoordinates(offsetCoord));
-	        var cell         = grid.getCell(offsetCoord);
+	        var cell = grid.getCell(offsetCoord);
+	        cell.highlight();
 	        
-	        var circle = HexMath.hexagon(offsetCoord, 0, grid);
-	        circle.map( function(val){grid.getCell(val).highlight();} );
-	        circle.map( function(val){grid.drawCell(grid.getCell(val));} );
-
+	        cell.draw();
 	        grid.renderWith(renderer);
 	    }
 
+	    var isDrag = false;
 	    var prevCoord = {i:-1, j:-1};
+	    var prevState = false;
 	    var onmousemove = function (ev) {
+	    	var grid = self.grid;
+            var mousePosition = {x:ev.offsetX,y:ev.offsetY}
+			var offsetCoord = grid._toOffsetCoordinates( mousePosition );
+			var index = offsetCoord.i + offsetCoord.j * self.conf.grid.size.w;
+	        var state = self.model.state;
 			if (ev.buttons === 1) {
-	            var grid = self.activeGrid;
-	            var mousePosition = {x:ev.offsetX,y:ev.offsetY}
-	            var offsetCoord = grid._toOffsetCoordinates( mousePosition );
+				isDrag = true;  
 	            if (offsetCoord.i !== prevCoord.i || offsetCoord.j !== prevCoord.j) {
-	                var cell = grid.getCell(offsetCoord);
-	                
-	                var circle = HexMath.hexagon(offsetCoord, 0, grid);
-	                circle.map( function(val){grid.getCell(val).highlight();} );
-	                circle.map( function(val){grid.drawCell(grid.getCell(val));} );
-	                grid.renderWith(renderer);
+	            	if (!self.grid._offset.inBounds(offsetCoord)) {return;}
+	            	// Flip model
+	            	self.model[state][index] = !self.model[state][index];
+
+	            	// Quick update of GUI
+	            	var cell = grid.getCell(offsetCoord);
+	            	if (cell !== null) {
+	            		cell.highlight(prevState);
+	            		cell.draw();
+	            		grid.renderWith(self.renderer);
+	            	}
 	            }
 	            prevCoord = offsetCoord;
-	        }
+	        } else {
+	        	isDrag = false;
+	        	prevState = !self.model[state][index];
+	        }	       
     	}
     	this.onmouseup   = onmouseup;
     	this.onmousemove = onmousemove;
     }
 
 	Game.prototype.clear = function () {
-		this.clearActiveGrid();
-		this.clearPassiveGrid();
-	}
-	Game.prototype.clearActiveGrid = function () {
-		for (var i = 0; i < this.activeGrid.size.w; ++i) {
-			for (var j = 0; j < this.activeGrid.size.h; ++j) {
-				this.activeGrid.getCell({i:i,j:j}).highlight(false);
+		for (var i = 0; i < this.conf.grid.size.w; ++i) {
+			for (var j = 0; j < this.conf.grid.size.h; ++j) {
+				var index = i + j * this.conf.grid.size.w;
+				this.model[this.model.state][index] = false;
+				this.grid.getCell({i:i,j:j}).highlight(false);
 			}
 		}
-		this.activeGrid.draw();
-		this.activeGrid.renderWith(renderer);
+		this.drawActiveModel();
+		this.renderActiveModel();
 	}
-	Game.prototype.clearPassiveGrid = function () {
-		for (var i = 0; i < this.passiveGrid.size.w; ++i) {
-			for (var j = 0; j < this.passiveGrid.size.h; ++j) {
-				this.passiveGrid.getCell({i:i,j:j}).highlight(false);
+	Game.prototype.switchActiveModel = function () {
+		this.model.state ^= 1;
+	}
+
+	Game.prototype.drawActiveModel   = function () {
+		var state = this.model.state;
+		var grid  = this.model[state];
+		for (var i = 0; i < this.conf.grid.size.w; ++i) {
+			for (var j = 0; j < this.conf.grid.size.h; ++j) {
+				var index = i + j * this.conf.grid.size.w;
+				var value = grid[index];
+				var cell  = this.grid.getCell({i:i, j:j});
+				cell.highlight(value);
 			}
 		}
+		this.grid.draw();
 	}
-	Game.prototype.switchActiveGrid = function () {
-		if (this.state === 0) {
-			this.activeGrid  = this.grid2;
-			this.passiveGrid = this.grid1;
-		} else {
-			this.activeGrid  = this.grid1;
-			this.passiveGrid = this.grid2;
-		}
-		this.state ^= 1;
+	Game.prototype.renderActiveModel   = function () {
+		this.grid.renderWith(this.renderer);
 	}
 
 	Game.prototype.fillRandom = function (fraction) {
-		for (var i = 0; i < this.passiveGrid.size.w; ++i) {
-			for (var j = 0; j < this.passiveGrid.size.h; ++j) {
-				if (Math.random() < fraction) {
-					this.activeGrid.getCell({i:i,j:j}).highlight();
-				}
+		var state = this.model.state;
+		var grid  = this.model[state];
+		for (var i = 0; i < this.conf.grid.size.w; ++i) {
+			for (var j = 0; j < this.conf.grid.size.h; ++j) {
+				grid[i+j*this.conf.grid.size.w] = Math.random() < fraction;
 			}
 		}
-		this.activeGrid.draw();
-		this.activeGrid.renderWith(renderer);
+		this.drawActiveModel();
 	}
 
-	Game.prototype.logic = function (sum, cell, prevState) {
+	Game.prototype.logic = function (sum, prevState) {
 		var rule = this.rules[sum];
 		switch (rule) {
-			case 0: cell.highlight(false    ); break;
-			case 1: cell.highlight(prevState); break;
-			case 2: cell.highlight(true     ); break;
+			case 0: return false    ;
+			case 1: return prevState;
+			case 2: return true     ;
 		}
 	}
 
@@ -132,7 +148,7 @@ var HexLife = function () {
 		// TODO: Extract fps limiter to HexUtil and do a debouncer.
 		if (stepsPerSecond !== undefined) {
 
-			if (!this.isStarted        ) {return;}
+			if (!this.isStarted) {return;}
 
 			var elapsedTime = -1;
 			// this.previousTime = this.currentTime;
@@ -150,24 +166,37 @@ var HexLife = function () {
 			}
 		}
 
-		for (var i = 0; i < this.activeGrid.size.w; ++i) {
-			for (var j = 0; j < this.activeGrid.size.h; ++j) {
-				var offsetCoord = {i:i, j:j};
-				var prevState   = this . activeGrid  . getCell(offsetCoord) . isHighlighted;
-				var passiveCell = this . passiveGrid . getCell(offsetCoord);
-				var activeNeighbors = HexMath.hexagon(offsetCoord, 1, this.activeGrid);
-				var sum       = 0;
-				var self = this;
+		var self = this;
+		var state = this.model.state;
+		var activeModel  = this.model[state  ];
+		var passiveModel = this.model[state^1]
+
+		for (var i = 0; i < this.conf.grid.size.w; ++i) {
+			for (var j = 0; j < this.conf.grid.size.h; ++j) {
+				var offsetCoord     = {i:i, j:j};
+				var index           = offsetCoord.i + offsetCoord.j*this.conf.grid.size.w;
+				var prevState       = activeModel[index];
+				var activeNeighbors = HexMath.hexagon(offsetCoord, 1, this.grid);
+
+				var sum = 0;
 				activeNeighbors.forEach(function(e){
-					if (self.activeGrid.getCell(e).isHighlighted) {sum += 1;}
+					var o = self.grid._cube.toOffsetCoordinates(e);
+					if (activeModel[o.i + o.j*self.conf.grid.size.w]) {sum += 1;}
 				});
-				this.logic(sum, passiveCell, prevState);
+
+				var newState = this.logic(sum, prevState);
+				passiveModel[index] = newState;
+
+				var cell = this.grid.getCell(offsetCoord);
+				if (cell !== null) {
+					cell.highlight(newState);
+					cell.draw();
+				}
 			};	
 		};
 
-		this.switchActiveGrid();
-		this.activeGrid.draw();
-		this.activeGrid.renderWith(renderer);
+		this.switchActiveModel();
+		this.renderActiveModel();
 	}
 	
 	// External API

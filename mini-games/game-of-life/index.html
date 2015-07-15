@@ -4,12 +4,9 @@
 
     <meta property="og:tag title"     content="Hexway's Game of Life"/>
     <meta property="og:tag image"     content="./preview.png"/>
-    <!-- <meta property="og:tag type"      content="game"/>
-    <meta property="og:tag url"       content="tag value"/> 
-    <meta property="og:tag site_name" content="tag value"/>  -->
 
-    <link rel="stylesheet" type="text/css" href="./lib/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="./css/HexLife.css">
+    <link rel="stylesheet" type="text/css" href="../lib/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/HexLife.css">
 
     <script src="./lib/pixi.js"></script>
     <script src="./lib/fpsmeter.min.js"></script>
@@ -46,9 +43,9 @@
                     <div class='flex-container btn-group'>
                         <input type='button' class='rule btn btn-danger'  value='0'>
                         <input type='button' class='rule btn btn-danger'  value='1'>
-                        <input type='button' class='rule btn btn-success' value='2'>
-                        <input type='button' class='rule btn btn-warning' value='3'>
-                        <input type='button' class='rule btn btn-danger'  value='4'>
+                        <input type='button' class='rule btn btn-warning' value='2'>
+                        <input type='button' class='rule btn btn-success' value='3'>
+                        <input type='button' class='rule btn btn-warning'  value='4'>
                         <input type='button' class='rule btn btn-danger'  value='5'>
                         <input type='button' class='rule btn btn-danger'  value='6'>
                     </div>
@@ -58,6 +55,7 @@
         <div class='well2 bottom'>
             <h2>Explanation</h2>
             <p>This is the classical Game of Life but run on a heaxgonal grid instead of the usual square. Paint something on the field! Then see what happens by pressing the <em>'Simulation stopped'</em> button.</p>
+            <p>When drawing, click a cell to toggle its state. Drag the mouse with the left button held down to paint an area. Start on a dead cell to paint active ones and start on an active cell to deactivate.</p>
             <h4>In-depth</h4>
             <p> Highlighted cells are active. Dark cells are dead. The evolution of the cell's lives are governed by the current active rule, found in the rule configuration. The rules determine what happens when a cell has a certain number of neighbours. The color of the button indicates what happens when a cell has x number of neighbours, where x is the number on the button. A green color means a cell will be turned active in the next step. A yellow color that a cell will retain its previous state. A red color that a cell will die.</p>
 
@@ -98,6 +96,7 @@
         if (life.isStarted) { life.step(conf.life.stepsPerSecond); }
     }
 
+    renderer.view.onmouseup   = life.onmouseup
     renderer.view.onmousemove = life.onmousemove
 
     document.getElementById('btn-clear').onclick = function () {
