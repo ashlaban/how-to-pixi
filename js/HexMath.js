@@ -19,21 +19,60 @@ var HexMath = (function () {
 							direction.south,
 							direction.southWest,
 							direction.northWest ];
+	direction.toInt = {
+		north    : 0,
+		northEast: 1,
+		southEast: 2,
+		south    : 3,
+		southWest: 4,
+		northWest: 5,
+	}
 	
 	var cos_60 = 0.5;
     var sin_60 = 0.86602540378;
-	var hexPoints = [ -1      ,  0      ,
-                                -cos_60 , -sin_60 , 
-                                 cos_60 , -sin_60 , 
-                                 1      ,  0      ,
-                                 cos_60 ,  sin_60 ,
-                                -cos_60 ,  sin_60
-                                ];
+	var hexPoints = [	-1      ,  0      ,
+                	    -cos_60 , -sin_60 , 
+                	     cos_60 , -sin_60 , 
+                	     1      ,  0      ,
+                	     cos_60 ,  sin_60 ,
+                	    -cos_60 ,  sin_60
+                	    ];
 	var hexShape  = new PIXI.Polygon(hexPoints);
 
 	// Seriously!?
 	var hexOutlinePoints = hexPoints.map( function(val){return val-0.5;} );
 	var hexOutlineShape  = new PIXI.Polygon(hexOutlinePoints);
+
+	var hexEdge = {
+		north    : function(t) {return new PIXI.Polygon([-cos_60, -sin_60,  cos_60, -sin_60,  cos_60+t*cos_60, -sin_60+t*sin_60, -cos_60-t*cos_60, -sin_60+t*sin_60 ]);},
+		northEast: function(t) {return new PIXI.Polygon([ cos_60, -sin_60,       1,       0,       1-t*cos_60,       0+t*sin_60,  cos_60-t       , -sin_60          ]);},
+		southEast: function(t) {return new PIXI.Polygon([      1,       0,  cos_60,  sin_60,  cos_60-t       ,  sin_60         ,       1-t*cos_60,       0-t*sin_60 ]);},
+		south    : function(t) {return new PIXI.Polygon([ cos_60,  sin_60, -cos_60,  sin_60, -cos_60-t*cos_60,  sin_60-t*sin_60,  cos_60+t*cos_60,  sin_60-t*sin_60 ]);},
+		southWest: function(t) {return new PIXI.Polygon([-cos_60,  sin_60,      -1,       0,      -1+t*cos_60,       0-t*sin_60, -cos_60+t       ,  sin_60          ]);},
+		northWest: function(t) {return new PIXI.Polygon([     -1,       0, -cos_60, -sin_60, -cos_60+t       , -sin_60         ,      -1+t*cos_60,       0+t*sin_60 ]);},
+	}
+	hexEdge[0] = hexEdge.north;
+	hexEdge[1] = hexEdge.northEast;
+	hexEdge[2] = hexEdge.southEast;
+	hexEdge[3] = hexEdge.south;
+	hexEdge[4] = hexEdge.southWest;
+	hexEdge[5] = hexEdge.northWest;
+
+	function directionForPoints(p0, p1, grid) {
+		p0 = grid._toCubeCoordinates(p0);
+		p1 = grid._toCubeCoordinates(p1);
+
+		var d = {x: p1.x-p0.x, y: p1.y-p0.y, z: p1.z-p0.z};
+
+		for (var i = 0; i < direction.asArray.length; ++i) {
+			var dir = direction.asArray[i];
+			if 	(      d.x === dir.x
+					&& d.y === dir.y
+					&& d.z === dir.z)
+			{ return i; }
+		};
+		return -1;
+	}
 
 	function distance(p0, p1, grid) {
 		p0 = grid._toCubeCoordinates(p0);
@@ -59,7 +98,8 @@ var HexMath = (function () {
 	    for (var i = 0; i < 6; ++i) {
 	    	dir = direction.asArray[i];
 	        for (var j = 0; j < r; ++j) {
-	            if (grid._cube.inBounds(cube)) { results.push(cube); }
+	            // if (grid._cube.inBounds(cube)) { results.push(cube); }
+	            results.push(cube);
 	            cube = {x:cube.x + dir.x, y:cube.y + dir.y, z:cube.z + dir.z,}
 	        }
 	    }
@@ -81,11 +121,20 @@ var HexMath = (function () {
 		return results;
 	}
 
+	function getNeighbours(p0, grid) {
+		return hexagon(p0, 1, grid);	
+	}
+
 	// Exported API
 	var API = {
+
+		directionForPoints: directionForPoints,
+
 		dist        : distance,
 		hexagon     : hexagon,
 		hexagonDisc : hexagonDisc,
+
+		getNeighbours: getNeighbours,
 
 		cos_60 : cos_60,
 		sin_60 : sin_60,
@@ -93,6 +142,7 @@ var HexMath = (function () {
 		hexOutlinePoints : hexOutlinePoints,
 		hexShape         : hexShape,
 		hexOutlineShape  : hexOutlineShape,
+		hexEdge : hexEdge,
 	};
 
 	return API;

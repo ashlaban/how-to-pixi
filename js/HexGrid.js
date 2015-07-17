@@ -1,4 +1,4 @@
-function HexGrid( gridConf ) {
+function HexGrid( gridConf, colorArray ) {
 
     var self = this;
 
@@ -241,16 +241,11 @@ function HexGrid( gridConf ) {
         for (var ix = 0; ix < self.size.w; ++ix) {
 
             var cellPosition = self._offset.toPixelCoordinates({i:ix, j:iy});
-            // cellPosition.x += position.x;
-            // cellPosition.y += position.y;
-            // console.log(cellPosition);
-
-            var color    = gridConf.colorPalette.random();
+            var color = (colorArray!==null) ? colorArray[ix+iy*self.size.w] : (0xffffff);
             var cell     = new HexCell(     cellPosition,
                                             self.scale,
                                             color,
-                                            gridConf.lineWidth,
-                                            gridConf.lineColor
+                                            gridConf.cell
                                         );
             self._graphics.addChild(cell._graphics)
             self.cells.push(cell)
@@ -273,14 +268,16 @@ HexGrid.prototype.drawCell = function ( cell ) {
 HexGrid.prototype.getCell = function ( coordinate ) {
     var offsetCoord = this._toOffsetCoordinates(coordinate);
 
-    if (offsetCoord.i < 0 || offsetCoord.i > this.size.w) {return null;}
-    if (offsetCoord.j < 0 || offsetCoord.j > this.size.h) {return null;}
+    if (offsetCoord.i < 0 || offsetCoord.i >= this.size.w) {return null;}
+    if (offsetCoord.j < 0 || offsetCoord.j >= this.size.h) {return null;}
 
     var index = offsetCoord.i + offsetCoord.j * this.size.w;
     
     if (index > 0 || index < this.cells.length) {
         return this.cells[index];    
     }
+
+    return null;
 }
 
 HexGrid.prototype.renderWith = function ( renderer ) {

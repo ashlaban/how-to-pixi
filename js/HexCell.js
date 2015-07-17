@@ -1,6 +1,6 @@
 // requires HexMath.js
 
-function HexCell( position, scale, color, lineWidth, lineColor) {
+function HexCell( position, scale, color, conf) {
     this._graphics = new PIXI.Graphics();
     this._graphics.position.x = position.x
     this._graphics.position.y = position.y
@@ -8,8 +8,12 @@ function HexCell( position, scale, color, lineWidth, lineColor) {
     this._graphics.scale.y = scale.y;
     this.color = color;
 
-    this.lineWidth = lineWidth;
-    this.lineColor = lineColor;
+    this.lineWidth = conf.line.width;
+    this.lineColor = conf.line.color;
+
+    this.edges     = [];
+    this.edgeWidth = conf.edge.width;
+    this.edgeColor = conf.edge.color;
 
     this._colorStack = [];
 
@@ -46,11 +50,23 @@ HexCell.prototype.draw = function () {
         color = this.color;
     }
 
+    // Main hexagon
     this._graphics.clear(); // Important, otherwise mem-consumption will explode!
     this._graphics.beginFill(color);
-    this._graphics.drawShape(HexMath.hexShape);        
+    this._graphics.drawShape(HexMath.hexShape);
     this._graphics.endFill();
 
+    // Specific edges
+    if (this.edges) {
+        var self = this;
+        this._graphics.beginFill(this.edgeColor);
+        this.edges.forEach(function(val){
+            self._graphics.drawShape(HexMath.hexEdge[val](self.edgeWidth));
+        });
+        this._graphics.endFill();
+    }
+
+    // Stroke
     this._graphics.lineStyle( this.lineWidth, this.lineColor, 1 );
     this._graphics.drawShape( HexMath.hexOutlineShape );
     this._graphics.lineStyle( this.lineWidth, this.lineColor, 0 );

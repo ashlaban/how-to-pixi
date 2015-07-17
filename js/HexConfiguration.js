@@ -5,38 +5,46 @@ var HexConfiguration = function () {
 
 	var API = {};
 
-	var colorPalette = new HexColor.HexPalette( HexColor.pastell, 1 );
+	// var colorPalette = new HexColor.HexPalette( HexColor.pastell, 7 );
+	var colorPalette = new HexColor.getNEquallySpacedPastellColors(7);
 
 	function Configuration () {
 		var self = this;
 
 		// View default configruation
 		this.view = {
-            size    : { w:320, h:320 },
+            size    : { w:500, h:500 },
             padding : {
-                        top: 31*HexMath.sin_60, 
-                        right: 16,
-                        bottom: 31*HexMath.sin_60,
-                        left: 16
+                        top    : 40, 
+                        right  : 40,
+                        bottom : 40,
+                        left   : 40
                        },
         };
 
         // Grid default configruation
         this.grid = {
-        	colorPalette: colorPalette,
-
-            lineColor: HexColor.desaturate(HexColor.invertValue(colorPalette.colors[0])),
-            lineWidth: 0.15,
+            lineColor: HexColor.desaturate(HexColor.invertValue(colorPalette[0])),
+            lineWidth: 0.10,
 
             position : { x: 25, y: 40 },
-            scale    : { x: 7 , y: 7  },
+            scale    : { x: 20, y: 20 },
              size    : { w:30 , h: 20 },
             // size     : hexesInCanvas
+            
+            cell: {
+		        line: { width: 0.10,
+		                color:HexColor.desaturate(HexColor.invertValue(colorPalette[0])),
+		            },
+		        edge: { width: 0.20,
+		                color: 0xee3333,
+		            },
+		    }
         };
 
-        // Hexway's Game of Life default configruation
-        this.life = {
-            stepsPerSecond: 2
+        // 7-HexColors default configruation
+        this.game = {
+            colorPalette: colorPalette,
         };
 	}
 
