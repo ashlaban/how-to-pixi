@@ -70,6 +70,8 @@ HexCell.prototype.draw = function () {
     this._graphics.lineStyle( this.lineWidth, this.lineColor, 1 );
     this._graphics.drawShape( HexMath.hexOutlineShape );
     this._graphics.lineStyle( this.lineWidth, this.lineColor, 0 );
+
+    // Text
 }
 
 HexCell.prototype.renderWith = function ( renderer ) {

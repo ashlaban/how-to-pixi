@@ -58,9 +58,9 @@ var HexMath = (function () {
 	hexEdge[4] = hexEdge.southWest;
 	hexEdge[5] = hexEdge.northWest;
 
-	function directionForPoints(p0, p1, grid) {
-		p0 = grid._toCubeCoordinates(p0);
-		p1 = grid._toCubeCoordinates(p1);
+	function directionForPoints(p0, p1, coordinateSystem) {
+		p0 = coordinateSystem.toCubeCoordinates(p0);
+		p1 = coordinateSystem.toCubeCoordinates(p1);
 
 		var d = {x: p1.x-p0.x, y: p1.y-p0.y, z: p1.z-p0.z};
 
@@ -74,9 +74,9 @@ var HexMath = (function () {
 		return -1;
 	}
 
-	function distance(p0, p1, grid) {
-		p0 = grid._toCubeCoordinates(p0);
-		p1 = grid._toCubeCoordinates(p1);
+	function distance(p0, p1, coordinateSystem) {
+		p0 = coordinateSystem.toCubeCoordinates(p0);
+		p1 = coordinateSystem.toCubeCoordinates(p1);
 
 		var dx = Math.abs(p1.x - p0.x);
 		var dy = Math.abs(p1.y - p0.y);
@@ -87,8 +87,8 @@ var HexMath = (function () {
 		return d;
 	}
 
-	function hexagon(p0, r, grid) {
-		p0 = grid._toCubeCoordinates(p0);
+	function hexagon(p0, r, coordinateSystem) {
+		p0 = coordinateSystem.toCubeCoordinates(p0);
 
 		if (r === 0) {return [p0];}
 
@@ -98,7 +98,7 @@ var HexMath = (function () {
 	    for (var i = 0; i < 6; ++i) {
 	    	dir = direction.asArray[i];
 	        for (var j = 0; j < r; ++j) {
-	            // if (grid._cube.inBounds(cube)) { results.push(cube); }
+	            // if (coordinateSystem.cube.inBounds(cube)) { results.push(cube); }
 	            results.push(cube);
 	            cube = {x:cube.x + dir.x, y:cube.y + dir.y, z:cube.z + dir.z,}
 	        }
@@ -107,8 +107,8 @@ var HexMath = (function () {
 		return results;
 	}
 
-	function hexagonDisc(p0, r, grid) {
-		p0 = grid._toCubeCoordinates(p0);
+	function hexagonDisc(p0, r, coordinateSystem) {
+		p0 = coordinateSystem._toCubeCoordinates(p0);
 
 		var results = []
 		for (var dx = -r; dx <= r; ++dx) {
@@ -121,8 +121,8 @@ var HexMath = (function () {
 		return results;
 	}
 
-	function getNeighbours(p0, grid) {
-		return hexagon(p0, 1, grid);	
+	function getNeighbours(p0, coordinateSystem) {
+		return hexagon(p0, 1, coordinateSystem);	
 	}
 
 	// Exported API

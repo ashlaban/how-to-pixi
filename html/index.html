@@ -11,6 +11,7 @@
 
     <script src="../js/HexUtil.js"></script>
     <script src="../js/HexMath.js"></script>
+    <script src="../js/HexCoordinate.js"></script>
     <script src="../js/HexColor.js"></script>
     <script src="../js/HexConfiguration.js"></script>
     <script src="../js/HexCell.js"></script>
@@ -27,6 +28,11 @@
         <div id='content' class='flex-container vertical'>
             <div id="canvas-wrapper" class='well2 middle'></div>
             <div id='side-panel' class='flex-container vertical well2 middle'>
+                <div id='influence-panel'>
+                    Player 1:<span id='influence-player-1'></span>%
+                    -
+                    Player 2:<span id='influence-player-2'></span>%
+                </div>
                 <div id='color-select' class='flex-container btn-group'>
                     <input type='button' class='rule btn' value='1'>
                     <input type='button' class='rule btn' value='2'>
@@ -40,12 +46,22 @@
         </div>
         <div class='well2 bottom'>
             <h2>Explanation</h2>
+            <p>
             This is the old Infrogrames game 7-colors ported to the interblaggosphere. Originally created by Dmitry Pashkov from the Russian company Gamos.
+            </p>
 
+            <p>
             Select a color to grow your territory. Beat the computer, first to cover more than 50% of the screen wins!
+            </p>
 
             <h3>In-depth</h3>
-            More to come.
+            <p>
+            You control the game by selecting a color. This can be done in one of three ways. Click a cell of the color you want to change into. Click one of the colored buttons below the playing field or press one of the number keys on you keyboard.
+            </p>
+
+            <p>
+            As you change color, you will absorb all adjacent cell with the selected color and thus grow you own territory. Beware! Selecting the same color as you already are still counts as a move. Use this to taunt the computer player.
+            </p>
 
         </div>
     </div>
@@ -71,21 +87,44 @@
     renderer.view.style.height = conf.view.size.h;
 
     var game = new HexGame.Game(conf, renderer);
+    updateInfluence();
 
     // Kick-start the rendering process
     animate();
+
+    DEBUG=0;
 
     function animate() {
         requestAnimationFrame(animate);
         if (game.isStarted) { game.step(conf.game.stepsPerSecond); }
     }
 
+    function updateInfluence() {
+        document.getElementById('influence-player-1').innerHTML = 
+            ' ' + Math.round(game.model.influence(1) * 100);
+        document.getElementById('influence-player-2').innerHTML = 
+            ' ' + Math.round(game.model.influence(2) * 100);
+    }
+
+    function step(color) {
+        game.step(color)
+        updateInfluence();
+    }
+
+    renderer.view.onclick = function(ev) {
+        var pixelCoordinate = {x:ev.offsetX, y:ev.offsetY};
+        var cell = game.grid.getCell(pixelCoordinate)
+        var color = cell.color;
+
+        step(color);
+    };
+
     var ruleButtons = [].slice.call(document.getElementsByClassName('rule'));
     ruleButtons.forEach(function(button, i) {
         var buttonColor = game.conf.game.colorPalette[i];
         button.style.backgroundColor = '#' + buttonColor.toString(16);
         button.onclick = function () {
-            game.flood(game.sourceCell, buttonColor);
+            step(buttonColor);
         };
     });
 

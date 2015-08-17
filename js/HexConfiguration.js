@@ -28,8 +28,10 @@ var HexConfiguration = function () {
             lineWidth: 0.10,
 
             position : { x: 25, y: 40 },
-            scale    : { x: 20, y: 20 },
-             size    : { w:30 , h: 20 },
+            // scale    : { x: 50, y: 50 },
+            // size     : { w: 30, h: 20 },
+            scale    : { x: 15, y: 15 },
+            size     : { w: 60, h: 40 },
             // size     : hexesInCanvas
             
             cell: {
@@ -45,6 +47,12 @@ var HexConfiguration = function () {
         // 7-HexColors default configruation
         this.game = {
             colorPalette: colorPalette,
+
+            player: {
+            	1: {color: 0xee3333},
+            	2: {color: 0x3333ee},
+            }
+
         };
 	}
 
