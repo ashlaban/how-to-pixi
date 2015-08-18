@@ -8,6 +8,7 @@ function HexCell( position, scale, color, conf) {
     this._graphics.scale.y = scale.y;
     this.color = color;
 
+    this.outline   = conf.line.color !== undefined;
     this.lineWidth = conf.line.width;
     this.lineColor = conf.line.color;
 
@@ -67,9 +68,11 @@ HexCell.prototype.draw = function () {
     }
 
     // Stroke
-    this._graphics.lineStyle( this.lineWidth, this.lineColor, 1 );
-    this._graphics.drawShape( HexMath.hexOutlineShape );
-    this._graphics.lineStyle( this.lineWidth, this.lineColor, 0 );
+    if (this.outline) {
+        this._graphics.lineStyle( this.lineWidth, this.lineColor, 1 );
+        this._graphics.drawShape( HexMath.hexOutlineShape );
+        this._graphics.lineStyle( this.lineWidth, this.lineColor, 0 );
+    };
 
     // Text
 }

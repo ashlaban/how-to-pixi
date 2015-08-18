@@ -24,18 +24,12 @@ var HexConfiguration = function () {
 
         // Grid default configruation
         this.grid = {
-            lineColor: HexColor.desaturate(HexColor.invertValue(colorPalette[0])),
-            lineWidth: 0.10,
-
             position : { x: 25, y: 40 },
-            // scale    : { x: 50, y: 50 },
-            // size     : { w: 30, h: 20 },
-            scale    : { x: 15, y: 15 },
+            scale    : { x: 10, y: 10 },
             size     : { w: 60, h: 40 },
-            // size     : hexesInCanvas
             
             cell: {
-		        line: { width: 0.10,
+		        line: { width: 0.05,
 		                color:HexColor.desaturate(HexColor.invertValue(colorPalette[0])),
 		            },
 		        edge: { width: 0.20,
@@ -85,8 +79,8 @@ var HexConfiguration = function () {
 		this.view.padding.bottom = padding.y / 2;
 		this.view.padding.left   = padding.x / 2;
 
-		this.grid.position.x = this.view.padding.left + sideLength.x / 2 - this.grid.lineWidth*this.grid.scale.x/2;
-		this.grid.position.y = this.view.padding.top  + sideLength.y     - this.grid.lineWidth/2;
+		this.grid.position.x = this.view.padding.left + sideLength.x / 2 - this.grid.cell.line.width*this.grid.scale.x/2;
+		this.grid.position.y = this.view.padding.top  + sideLength.y     - this.grid.cell.line.width/2;
 
 	}
 

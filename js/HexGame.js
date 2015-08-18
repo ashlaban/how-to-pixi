@@ -29,14 +29,6 @@ var HexGame = function () {
 
 		this.player        = player;
 		this.currentPlayer = API.PLAYER_1;
-		/**
-		 * Checks whether the game is finished or not. If the game is still 
-		 * undecided this.NO_PLAYER will be return. Otherwise API.PLAYER_X
-		 * corresponding to the winning player will be returned.
-		 * 
-		 * @return {Boolean} 	this.NO_PLAYER if the game is ongoing. Otherwise
-		 *                      the winning player.
-		 */
 		this.winner        = API.NO_PLAYER;
 
 		this.coordinateSystem = coordinateSystem;
@@ -51,7 +43,7 @@ var HexGame = function () {
 			this.array[linearCoord].owner = owner;
 		}
 
-		function floodRecurse (originalOwner, newColor, cubeCoord, returnValue) {
+		function flood (originalOwner, newColor, cubeCoord) {
 			
 			function inArray(array, cubeCoord) {
 				// return array.some(function(val){return val.x === cubeCoord.x && val.y === cubeCoord.y && val.z === cubeCoord.z;});
@@ -94,53 +86,10 @@ var HexGame = function () {
 					if (inArray(visited, neighbourCoord)){continue;}
 					toVisit.push(neighbourCoord);
 				}
-				// neighbours.forEach(function(neighbourCoord) {
-				// 	if (inArray(visited, neighbourCoord)){return;}
-				// 	toVisit.push(neighbourCoord);
-				// });
 			}
 
-			return {visited:null, modified:modified};
+			return modified;
 		}
-
-		// function floodRecurse (originalOwner, newColor, cubeCoord, returnValue) {
-		// 	// console.log('Parameters', grid, originalOwner, newColor, cubeCoord, visited);
-		// 	if (!self.coordinateSystem.cube.inBounds(cubeCoord)) {return returnValue;}
-		// 	// console.log('enter', cubeCoord)
-			
-		// 	var alreadyVisited = returnValue.visited.some(function(val){return val.x === cubeCoord.x && val.y === cubeCoord.y && val.z === cubeCoord.z;})
-		// 	if (alreadyVisited) {return returnValue;}
-		// 	returnValue.visited.push(cubeCoord);
-
-		// 	var linearCoord = self.coordinateSystem.toLinearCoordinates(cubeCoord);
-
-		// 	var owner = self.array[ linearCoord ].owner;
-		// 	if (!(owner === originalOwner) && !(owner === 0)) {return returnValue;}
-
-		// 	// var cell = grid.getCell(cubeCoord);
-		// 	// console.log('visit', HexColor.INT.toHSV(cell.color), cubeCoord, visited)
-
-		// 	var modelCell = self.array[linearCoord];
-		// 	if ( modelCell.owner === originalOwner || modelCell.color === newColor) {
-		// 		// console.log('ok!')
-		// 		self.array[linearCoord].color = newColor;
-		// 		self.array[linearCoord].owner = originalOwner;
-
-		// 		returnValue.modified.push( cubeCoord );
-		// 	} else {
-		// 		// console.log('not ok :(')
-		// 		return returnValue;
-		// 	}
-
-		// 	var neighbours = HexMath.getNeighbours(cubeCoord, self.coordinateSystem);
-		// 	neighbours.forEach(function(neighbourCoord) {
-		// 		// console.log(neighbourCoord)
-		// 		// var neighbourCell = grid.getCell(neighbourCoord);
-		// 		visited = floodRecurse( originalOwner, newColor, neighbourCoord, returnValue );
-		// 	});
-		// 	return returnValue;
-		// }
-
 
 		/*
 		 * Color should be int-color.
@@ -153,12 +102,11 @@ var HexGame = function () {
 			var linearCoord   = this.coordinateSystem.toLinearCoordinates(p0);
 			var originalOwner = this.array[linearCoord].owner;
 
-			var returnValue;
-			returnValue = floodRecurse ( originalOwner, newColor, cubeCoord, {modified:[], visited:[]});
+			var modified = flood ( originalOwner, newColor, cubeCoord );
 
 			this._updateWinner();
 
-			return returnValue.modified;
+			return modified;
 		}
 
 		this.influence = function (player) {
@@ -377,7 +325,6 @@ var HexGame = function () {
 		
 		// Pass turn
 		this.nextPlayer();
-		// console.log('logic', this.model.currentPlayer)
 	}
 
 	Game.prototype.step = function(newColor) {
@@ -387,7 +334,6 @@ var HexGame = function () {
 
 		// AI move
 		var aiColor = this.ai.getMove();
-
 		this.logic(aiColor);
 	}
 

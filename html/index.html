@@ -92,8 +92,6 @@
     // Kick-start the rendering process
     animate();
 
-    DEBUG=0;
-
     function animate() {
         requestAnimationFrame(animate);
         if (game.isStarted) { game.step(conf.game.stepsPerSecond); }
