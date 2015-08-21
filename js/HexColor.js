@@ -164,11 +164,14 @@ var HexColor = (function () {
     function getNEquallySpacedPastellColors(n) {
         var colors = [];
         var interval = 1/n;
-        var h = Math.random()*interval;
-        var s = 0.20 + (Math.random() - 0.5) * 0.125
-        var v = 0.75 + (Math.random() - 0.5) * 0.125
+        var h, s, v;
 
+        h = Math.random()*interval;
+        
         for (var i = 0; i<n; ++i) {
+            s = 0.20 + (Math.random() - 0.5) * 0.200
+            v = 0.75 + (Math.random() - 0.5) * 0.200
+
             colors.push( HSVtoINT( h, s, v ) );
             h += interval;
             h %= 1;

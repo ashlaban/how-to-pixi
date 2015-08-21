@@ -1,17 +1,19 @@
-function HexGrid( gridConf, model ) {
+function HexGrid( conf, model ) {
 
     var self = this;
 
     // ========================================================================
     // === Constructor       ==================================================
     // ========================================================================
-    self._graphics = new PIXI.Graphics()
-    self.position  = gridConf.position;
-    self._graphics.scale.x = gridConf.scale.x;
-    self._graphics.scale.y = gridConf.scale.y;
+    self.conf = conf;
 
-    self.scale = gridConf.scale;
-    self.size  = gridConf.size;
+    self._graphics = new PIXI.Graphics()
+    self.position  = conf.position;
+    self._graphics.scale.x = conf.scale.x;
+    self._graphics.scale.y = conf.scale.y;
+
+    self.scale = conf.scale;
+    self.size  = conf.size;
 
     self.coordinateSystem = new HexCoordinate.System(self.size, self.scale, self.position);
 
@@ -27,10 +29,41 @@ function HexGrid( gridConf, model ) {
             var cell     = new HexCell(     cellPixelCoord,
                                             self.scale,
                                             color,
-                                            gridConf.cell
+                                            conf.cell
                                         );
             self._graphics.addChild(cell._graphics)
             self.cells.push(cell)
+        }
+    }
+}
+
+/**
+ * The callback function will be provided the offsetCoordinates and the current
+ * cell as arguments, in that order. The callback will use the grid as its this
+ * variable.
+ * @param  {[type]} fun [description]
+ * @return {[type]}     [description]
+ */
+HexGrid.prototype.applyToCells = function ( callback ) {
+    var grid            ,
+        coordinateSystem,
+        offsetCoord     ,
+        linearCoord     ,
+        cell            ;
+
+        
+
+    // grid             = this;
+    // coordinateSystem = this.coordinateSystem;
+
+    for (var i = 0; i < this.conf.size.w; ++i) {
+        for (var j = 0; j < this.conf.size.h; ++j) {
+            offsetCoord = {i:i, j:j};
+            linearCoord = this.coordinateSystem.toLinearCoordinates(offsetCoord);
+            cell        = this.getCell(offsetCoord);
+
+            callback.call(this, offsetCoord, linearCoord, cell);
+
         }
     }
 }

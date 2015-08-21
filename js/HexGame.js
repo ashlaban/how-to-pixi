@@ -15,10 +15,18 @@ var HexGame = function () {
 		this.color = color;
 		this.owner = owner;
 	}
+
 	Cell.prototype.newRandom = function (colorPalette) {
 		var colorIndex = Math.floor(Math.random()*colorPalette.length);
 		var color      = colorPalette[colorIndex];
 		return new Cell( color, API.NO_PLAYER );
+	}
+
+	Cell.prototype.equals = function (other) {
+		return other !== null 
+			&& other !== undefined 
+			&& this.color === other.color 
+			&& this.owner === other.owner;
 	}
 
 	function Model ( conf, colorPalette, coordinateSystem, player ) {
@@ -57,7 +65,6 @@ var HexGame = function () {
 				return false;
 			}
 
-			var modified = [];
 			var visited  = [];
 			var toVisit  = HexMath.getNeighbours(cubeCoord, self.coordinateSystem);
 
@@ -78,7 +85,6 @@ var HexGame = function () {
 					
 				self.array[linearCoord].color = newColor;
 				self.array[linearCoord].owner = originalOwner;
-				modified.push( cubeCoord );
 
 				var neighbours = HexMath.getNeighbours(cubeCoord, self.coordinateSystem);
 				for (var i=neighbours.length-1; i >= 0; --i) {
@@ -88,21 +94,126 @@ var HexGame = function () {
 				}
 			}
 
-			return modified;
+			return visited;
 		}
+
+		function floodScanline (originalOwner, newColor, cubeCoord) {
+			// console.log('=== Start floodScanline ( originalOwner=' + originalOwner + ', newColor=' + newColor + ' cubeCoord=...'+' )', cubeCoord);
+			var visited  = [];
+			var toVisit  = [cubeCoord]
+
+			function inArray(array, cubeCoord) {
+				// return array.some(function(val){return val.x === cubeCoord.x && val.y === cubeCoord.y && val.z === cubeCoord.z;});
+				// return array.indexOf(cubeCoord)===-1;
+				for (var i=array.length-1; i >= 0; --i) {
+					var val = array[i];
+					if (val.x === cubeCoord.x && val.y === cubeCoord.y && val.z === cubeCoord.z) {
+						return true;
+					}
+				}
+				return false;
+			}
+
+			while (toVisit.length) {
+				cubeCoord = toVisit.pop();
+				// console.log(cubeCoord, toVisit)
+				if (!self.coordinateSystem.cube.inBounds(cubeCoord)) {continue;}
+				if ( inArray(visited, cubeCoord) )                   {continue;}
+
+				// Center
+				visited.push(cubeCoord);
+				linearCoord = self.coordinateSystem.toLinearCoordinates(cubeCoord);
+				modelCell   = self.array[linearCoord];
+				owner       = modelCell.owner;
+
+				if (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor)) {continue;}
+
+				self.array[linearCoord].color = newColor;
+				self.array[linearCoord].owner = originalOwner;
+
+				toVisit.push( {x:cubeCoord.x  , y:cubeCoord.y+1, z:cubeCoord.z-1} );
+				toVisit.push( {x:cubeCoord.x+1, y:cubeCoord.y-1, z:cubeCoord.z  } );
+				toVisit.push( {x:cubeCoord.x  , y:cubeCoord.y-1, z:cubeCoord.z+1} );
+				toVisit.push( {x:cubeCoord.x-1, y:cubeCoord.y+1, z:cubeCoord.z  } );
+
+				// 'East'
+				var eastCoord   = {x:cubeCoord.x+1, y:cubeCoord.y, z:cubeCoord.z-1};
+				while ( true ) {
+					if (!self.coordinateSystem.cube.inBounds(eastCoord)) {break;}
+					if ( inArray(visited, eastCoord) )                   {break;}
+
+					var linearCoord = self.coordinateSystem.toLinearCoordinates(eastCoord);
+					var modelCell   = self.array[linearCoord];
+					var owner       = modelCell.owner;
+
+					// if (modelCell.owner === 0             && modelCell.color === newColor) { /* Change owner */ }
+					// if (modelCell.owner === originalOwner                                ) { /* Change color */ }
+					if (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor)) {break;}
+
+					visited.push(eastCoord);
+
+					// console.log('east', eastCoord, modelCell.owner, modelCell.color)
+
+					linearCoord = self.coordinateSystem.toLinearCoordinates(eastCoord);
+					modelCell   = self.array[linearCoord];
+					owner       = modelCell.owner;
+
+					self.array[linearCoord].color = newColor;
+					self.array[linearCoord].owner = originalOwner;
+
+					toVisit.push( {x:eastCoord.x  , y:eastCoord.y+1, z:eastCoord.z-1} );
+					toVisit.push( {x:eastCoord.x+1, y:eastCoord.y-1, z:eastCoord.z  } );
+
+					eastCoord   = {x:eastCoord.x+1, y:eastCoord.y, z:eastCoord.z-1};
+				}
+
+				// 'West'
+				var westCoord   = {x:cubeCoord.x-1, y:cubeCoord.y, z:cubeCoord.z+1};
+				while ( true ) {
+					if (!self.coordinateSystem.cube.inBounds(westCoord)) {break;}
+					if ( inArray(visited, westCoord) )                   {break;}
+
+					linearCoord = self.coordinateSystem.toLinearCoordinates(westCoord);
+					modelCell   = self.array[linearCoord];
+					owner       = modelCell.owner;
+
+					if (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor)) {break;}
+
+					visited.push(westCoord);
+
+					// console.log('west', westCoord, modelCell.owner, modelCell.color)
+
+					linearCoord = self.coordinateSystem.toLinearCoordinates(westCoord);
+					modelCell   = self.array[linearCoord];
+					owner       = modelCell.owner;
+
+					self.array[linearCoord].color = newColor;
+					self.array[linearCoord].owner = originalOwner;
+
+					toVisit.push( {x:westCoord.x  , y:westCoord.y-1, z:westCoord.z+1} );
+					toVisit.push( {x:westCoord.x-1, y:westCoord.y+1, z:westCoord.z  } );
+
+					westCoord   = {x:westCoord.x-1, y:westCoord.y, z:westCoord.z+1};
+				}
+			}
+
+			// console.log('======= DONE!')
+			return visited;
+		}
+
+		this.flood = flood;
+		this.floodScanline = floodScanline;
 
 		/*
 		 * Color should be int-color.
 		 */
 		this.makeMove = function (player, newColor) {
-			// console.log(newColor)
-
 			var p0            = this.player[player].startCoord;
 			var cubeCoord     = this.coordinateSystem.toCubeCoordinates(p0);
 			var linearCoord   = this.coordinateSystem.toLinearCoordinates(p0);
 			var originalOwner = this.array[linearCoord].owner;
 
-			var modified = flood ( originalOwner, newColor, cubeCoord );
+			var modified = floodScanline ( originalOwner, newColor, cubeCoord );
 
 			this._updateWinner();
 
@@ -125,6 +236,21 @@ var HexGame = function () {
 		};
 	}
 
+	Model.prototype.equals = function (other) {
+		if (other === null || other === undefined) {return false;}
+		var retVal = true;
+		for (var i = other.array.length - 1; i >= 0; --i) {
+			if ( !this.array[i].equals(other.array[i]) ){
+				console.log('Inequality at: ', this.coordinateSystem.toOffsetCoordinates(i));
+				console.log(i, this.array[i], other.array[i]);
+
+				// return false;
+				retVal = false;
+			}
+		};
+		return retVal;
+	}
+
 	Model.prototype.nextPlayer = function () {
 		this.currentPlayer = (this.currentPlayer % (this.player.length - 1)) + 1;
 	}
@@ -140,6 +266,26 @@ var HexGame = function () {
 		return newModel;
 	}
 
+	Model.prototype.getCell = function (coordinate) {
+			var coordinate = coords[i];
+			var linearCoordinate = this.coordinateSystem.toLinearCoordinates(coordinate);
+
+			if (this.coordinateSystem.inBounds(linearCoordinate)) {
+				return this.array[linearCoordinate];
+			}
+
+			return null;
+	}
+
+	Model.prototype.getCells = function (coords) {
+		var retVal = [];
+		for (var i=coords.length-1; i >= 0; --i) {
+			var cell = this.getCell(coords[i]);
+			if (cell !== null) { retVal.push( cell );}
+		}
+		return array;
+	}
+
 	function Game (configuration, renderer) {
 
 		var self = this;
@@ -152,6 +298,7 @@ var HexGame = function () {
 		function getStartingOffsetCoord(player, grid) {
 			if (player === 1) {
 				return {i:0, j:this.conf.grid.size.h-1};
+				// return {i:3, j:this.conf.grid.size.h-3};
 			} else if (player === 2) {
 				return {i:this.conf.grid.size.w-1, j:0};
 			}
@@ -268,41 +415,40 @@ var HexGame = function () {
 		this.renderModel();
 	}
 
-	Game.prototype.paintHighlightAreaEdge = function(){
-		var grid             = this.grid;
-		var coordinateSystem = this.coordinateSystem;
+	Game.prototype.paintHighlightAreaEdge = function () {
+
 		var model            = this.model.array;
-		for (var i = 0; i < this.conf.grid.size.w; ++i) {
-			for (var j = 0; j < this.conf.grid.size.h; ++j) {
-				var offsetCoord = {i:i, j:j};
-				var linearCoord = this.coordinateSystem.toLinearCoordinates(offsetCoord);
-				var cell        = grid.getCell(offsetCoord);
-				cell.edges = [];
-				
-				if ( ! cell.isHighlighted ) { continue; }
+		var player           = this.player;
 
-				var owner = this.model.array[linearCoord].owner;
-				cell.edgeColor = this.player[owner].color;
-				
-				var neighbours = HexMath.getNeighbours(offsetCoord, coordinateSystem);
-				neighbours.forEach(function(neighbourCoord) {
-					var neighbourCell  = grid.getCell(neighbourCoord);
-					if (neighbourCell === null) {
-						cell.edges.push( HexMath.directionForPoints(offsetCoord, neighbourCoord, coordinateSystem) );
-						return;
-					}
-					
-					var neighbourOwner = model[ coordinateSystem.toLinearCoordinates(neighbourCoord) ].owner;
-					if  (      (!neighbourCell.isHighlighted)
-							|| ( owner        !== neighbourOwner )
-						) {
-						cell.edges.push( HexMath.directionForPoints(offsetCoord, neighbourCoord, coordinateSystem) );
-					}
-				});
+		function highlight (offsetCoord, linearCoord, cell) {
+			var grid = this;
 
-				cell.draw();
-			}
+			cell.edges = [];
+			
+			if ( ! cell.isHighlighted ) {return;}
+
+			var owner = model[linearCoord].owner;
+			cell.edgeColor = player[owner].color;
+			
+			var neighbours = HexMath.getNeighbours(offsetCoord, grid.coordinateSystem);
+			neighbours.forEach(function(neighbourCoord) {
+				var neighbourCell      = grid.getCell(neighbourCoord);
+				var neighbourDirection = HexMath.directionForPoints(offsetCoord, neighbourCoord, grid.coordinateSystem);
+				if (neighbourCell === null) {
+					cell.edges.push( neighbourDirection );
+					return;
+				}
+				
+				var neighbourOwner = model[ grid.coordinateSystem.toLinearCoordinates(neighbourCoord) ].owner;
+				if  ( (!neighbourCell.isHighlighted) || ( owner !== neighbourOwner ) ) { 
+					cell.edges.push( neighbourDirection );
+				}
+			});
+
+			cell.draw();
 		}
+
+		this.grid.applyToCells(highlight);
 	}
 
 	Game.prototype.nextPlayer = function () {
@@ -463,7 +609,8 @@ var HexGame = function () {
 	}
 	
 	// External API
-	API.Game = Game;
+	API.Game  = Game;
+	API.Model = Model;
 	API.AI = ArtificialIntelligence;
 
 
