@@ -2,22 +2,22 @@
 <head>
     <title>7-HexColors</title>
 
-    <link rel="stylesheet" type="text/css" href="../lib/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="../css/7-HexColors.css">
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/7-HexColors.css">
 
-    <script src="../lib/pixi.js"></script>
-    <script src="../lib/fpsmeter.min.js"></script>
-    <script src="../lib/progressbar.js"></script>
+    <script src="lib/pixi.js"></script>
+    <script src="lib/fpsmeter.min.js"></script>
+    <script src="lib/progressbar.js"></script>
 
-    <script src="../js/HexUtil.js"></script>
-    <script src="../js/HexMath.js"></script>
-    <script src="../js/HexCoordinate.js"></script>
-    <script src="../js/HexCoordinateSet.js"></script>
-    <script src="../js/HexColor.js"></script>
-    <script src="../js/HexConfiguration.js"></script>
-    <script src="../js/HexCell.js"></script>
-    <script src="../js/HexGrid.js"></script>
-    <script src="../js/HexGame.js"></script>
+    <script src="js/HexUtil.js"></script>
+    <script src="js/HexMath.js"></script>
+    <script src="js/HexCoordinate.js"></script>
+    <script src="js/HexCoordinateSet.js"></script>
+    <script src="js/HexColor.js"></script>
+    <script src="js/HexConfiguration.js"></script>
+    <script src="js/HexCell.js"></script>
+    <script src="js/HexGrid.js"></script>
+    <script src="js/HexGame.js"></script>
 </head>
 
 <body>
@@ -115,7 +115,7 @@
         var cell = game.grid.getCell(pixelCoordinate)
         var color = cell.color;
 
-        console.log('Clicked cell @ ', game.grid.coordinateSystem.toCubeCoordinates(pixelCoordinate))
+        // console.log('Clicked cell @ ', game.grid.coordinateSystem.toCubeCoordinates(pixelCoordinate))
 
         step(color);
     };
