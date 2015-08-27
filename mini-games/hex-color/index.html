@@ -123,6 +123,27 @@
         step(color);
     };
 
+    renderer.view.ontouchstart = function(ev) {
+
+        for (var iEvent = ev.changedTouches.length - 1; iEvent >= 0; --iEvent){
+            var touch = ev.changedTouches[iEvent]
+            if (touch.target !== renderer.view) {return;}
+
+            var x = touch.clientX - renderer.view.offsetLeft;
+            var y = touch.clientY - renderer.view.offsetTop;
+
+            // console.log(x, y)
+
+            var pixelCoordinate = {x:x, y:y};
+            var cell = game.grid.getCell(pixelCoordinate)
+            var color = cell.color;
+
+            // console.log('Clicked cell @ ', game.grid.coordinateSystem.toCubeCoordinates(pixelCoordinate))
+
+            step(color);
+        }
+    };
+
     var ruleButtons = [].slice.call(document.getElementsByClassName('rule'));
     ruleButtons.forEach(function(button, i) {
         var buttonColor = game.conf.game.colorPalette[i];

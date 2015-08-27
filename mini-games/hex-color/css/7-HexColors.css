@@ -22,7 +22,10 @@ h1 {
 }
 
 #canvas-wrapper {
+    display        : -webkit-flex;
     display        : flex;
+    -webkit-align-items    : center;
+    -webkit-justify-content: center;
     align-items    : center;
     justify-content: center;
 
@@ -52,12 +55,16 @@ h1 {
 }
 
 .flex-container {    
+    display        : -webkit-flex;
     display        : flex;
+    -webkit-align-items    : center;
+    -webkit-justify-content: center;
     align-items    : center;
     justify-content: center;
 }
 
 .vertical {
+    -webkit-flex-direction: column;
     flex-direction: column;
 }
 
