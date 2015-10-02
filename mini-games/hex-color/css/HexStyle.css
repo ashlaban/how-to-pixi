@@ -1,10 +1,19 @@
-body {background-color: #2C5D6F;}
 
+* {
+    box-sizing: border-box;
+}
+
+/* === tag === */
+
+body {
+    background-color: #2C5D6F;
+}
 h1 {
     margin: 10px 10px 10px 10px;
     text-align: center;
 }
 
+/* === named components === */
 #content-wrapper {
     padding-top   : 25px;
     padding-bottom: 25px;
@@ -35,38 +44,9 @@ h1 {
     width : 620px;
     background-color: #4C7D8F;
 }
-#influence-panel {
-    /*display: flex;
-    align-items    : center;
-    justify-content: space-around;*/
 
-    font-weight: bold;
-}
-#color-select {
-    padding: 10px;
-}
-
-.rule {
-    border-width : 1px;
-    border-style : solid;
-    border-color : #000000;
-}
-
-.flex-container {    
-    display        : -webkit-flex;
-    display        : flex;
-    -webkit-align-items    : center;
-    -webkit-justify-content: center;
-    align-items    : center;
-    justify-content: center;
-}
-
-.vertical {
-    -webkit-flex-direction: column;
-    flex-direction: column;
-}
-
-.well2 {
+/* === well === */
+.well {
     width: 620px;
     padding: 10px;
     background-color: #4C7D8F;
@@ -77,6 +57,23 @@ h1 {
     border-color : #000000;
 }
 
+/* === flexbox === */
+.flex-container {    
+    display        : -webkit-flex;
+    display        : flex;
+    -webkit-align-items    : center;
+    -webkit-justify-content: center;
+    align-items    : center;
+    justify-content: center;
+
+    margin: 0px;
+}
+.flex-vertical {
+    -webkit-flex-direction: column;
+    flex-direction: column;
+}
+
+/* === border === */
 .top {
     border-radius: 10px 10px 0px 0px;
 }

@@ -2,256 +2,6 @@ var HexGame = function () {
 
 	var API = {};
 
-	API.NO_PLAYER = 0;
-	API.PLAYER_1  = 1;
-	API.PLAYER_2  = 2;
-	API.PLAYER_3  = 3;
-	API.PLAYER_4  = 4;
-	API.PLAYER_5  = 5;
-	API.PLAYER_6  = 6;
-	API.PLAYER_7  = 7;
-
-	function Cell (color, owner) {
-		this.color = color;
-		this.owner = owner;
-	}
-
-	Cell.prototype.newRandom = function (colorPalette) {
-		var colorIndex = Math.floor(Math.random()*colorPalette.length);
-		var color      = colorPalette[colorIndex];
-		return new Cell( color, API.NO_PLAYER );
-	}
-
-	Cell.prototype.equals = function (other) {
-		return other !== null 
-			&& other !== undefined 
-			&& this.color === other.color 
-			&& this.owner === other.owner;
-	}
-
-	function Model ( conf, colorPalette, coordinateSystem, player ) {
-		var self = this;
-
-		this.palette = colorPalette;
-		this.conf    = conf;
-
-		this.player        = player;
-		this.currentPlayer = API.PLAYER_1;
-		this.winner        = API.NO_PLAYER;
-
-		this.coordinateSystem = coordinateSystem;
-
-		var arraySize = this.conf.size.w*this.conf.size.h;
-		this.array = Array.apply(null, Array(arraySize)).map(function () {
-			return Cell.prototype.newRandom(self.palette);
-		});
-
-		this.setStart = function ( p0, owner ) {
-			var linearCoord = this.coordinateSystem.toLinearCoordinates(p0);
-			this.array[linearCoord].owner = owner;
-		}
-
-		function flood (originalOwner, newColor, cubeCoord) {
-
-			var modified = [];
-			var visited  = Object.create(null);
-			var toVisit  = HexMath.getNeighbours(cubeCoord, self.coordinateSystem);
-
-			while (toVisit.length) {
-				cubeCoord = toVisit.pop();
-				// console.log(cubeCoord, toVisit)
-				if (!self.coordinateSystem.cube.inBounds(cubeCoord)) {continue;}
-
-				var linearCoord = self.coordinateSystem.toLinearCoordinates(cubeCoord);
-				var modelCell   = self.array[linearCoord];
-
-				visited[linearCoord] = true;
-				modified.push(cubeCoord);
-
-				if (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor)) {continue;}
-					
-				self.array[linearCoord].color = newColor;
-				self.array[linearCoord].owner = originalOwner;
-
-				var neighbours = HexMath.getNeighbours(cubeCoord, self.coordinateSystem);
-				for (var i=neighbours.length-1; i >= 0; --i) {
-					var neighbourCoord = neighbours[i];
-					if (!visited[self.coordinateSystem.toLinearCoordinates(neighbourCoord)]){
-						toVisit.push(neighbourCoord);	
-					}
-				}
-			}
-
-			return modified;
-		}
-
-		function floodScanline (originalOwner, newColor, cubeCoord) {
-			/*
-			 * WARNING: This code contains a bug. Sometimes a scanline is not expanded properly.
-			 */
-			// console.log('=== Start floodScanline ( originalOwner=' + originalOwner + ', newColor=' + newColor + ' cubeCoord=...'+' )', cubeCoord);
-			var modified = [];
-			var toVisit  = [cubeCoord];
-			var visited  = Object.create(null);
-
-			var linearCoord, modelCell;
-
-			while (toVisit.length) {
-				cubeCoord   = toVisit.pop();
-				linearCoord = self.coordinateSystem.toLinearCoordinates(cubeCoord);
-				// console.log(cubeCoord, toVisit)
-				if (!self.coordinateSystem.cube.inBounds(cubeCoord)) {continue;}
-				if ( visited[linearCoord] )                   {continue;}
-
-				// Center
-				modelCell   = self.array[linearCoord];
-				visited[linearCoord] = true;
-				modified.push(cubeCoord);
-
-				if (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor)) {continue;}
-
-				self.array[linearCoord].color = newColor;
-				self.array[linearCoord].owner = originalOwner;
-
-				toVisit.push( {x:cubeCoord.x  , y:cubeCoord.y+1, z:cubeCoord.z-1} );
-				toVisit.push( {x:cubeCoord.x+1, y:cubeCoord.y-1, z:cubeCoord.z  } );
-				toVisit.push( {x:cubeCoord.x  , y:cubeCoord.y-1, z:cubeCoord.z+1} );
-				toVisit.push( {x:cubeCoord.x-1, y:cubeCoord.y+1, z:cubeCoord.z  } );
-
-				// 'East'
-				
-				var directions = [ {
-										main      : HexMath.direction.northEast,
-										neighbours: [ 	HexMath.direction.north,
-														HexMath.direction.southEast]
-									},
-									{
-										main      : HexMath.direction.southWest,
-										neighbours: [ 	HexMath.direction.northWest,
-														HexMath.direction.south]
-									}
-								]
-
-				for (var i = directions.length - 1; i >= 0; i--) {
-					var currentDirection = directions[i];
-
-					var newCoord = HexMath.getNeighbour(cubeCoord, currentDirection.main, self.coordinateSystem)
-					while ( true ) {
-						linearCoord = self.coordinateSystem.toLinearCoordinates(newCoord);
-						if (visited[linearCoord]) {break;}
-						if (!self.coordinateSystem.cube.inBounds(newCoord)) {break;}
-
-						modelCell   = self.array[linearCoord];
-						if (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor)) {break;}
-
-						visited[linearCoord] = true;
-						modified.push(newCoord);
-
-						self.array[linearCoord].color = newColor;
-						self.array[linearCoord].owner = originalOwner;
-
-						for (var i = currentDirection.neighbours.length - 1; i >= 0; i--) {
-							var neighbourDirection = currentDirection.neighbours[i];
-							var neighbour = HexMath.getNeighbour(newCoord, neighbourDirection, self.coordinateSystem);
-							if (!visited[self.coordinateSystem.toLinearCoordinates(neighbour)]) {toVisit.push( neighbour );}
-						};
-
-						newCoord = HexMath.getNeighbour(newCoord, HexMath.direction.northEast, self.coordinateSystem)
-					}
-				};
-				
-
-			}
-
-			// console.log('======= DONE!')
-			return modified;
-		}
-
-		this.flood = flood;
-		this.floodScanline = floodScanline;
-
-		/*
-		 * Color should be int-color.
-		 */
-		this.makeMove = function (player, newColor) {
-			var p0            = this.player[player].startCoord;
-			var cubeCoord     = this.coordinateSystem.toCubeCoordinates(p0);
-			var linearCoord   = this.coordinateSystem.toLinearCoordinates(p0);
-			var originalOwner = this.array[linearCoord].owner;
-
-			var modified = flood ( originalOwner, newColor, cubeCoord );
-
-			this._updateWinner();
-
-			return modified;
-		}
-
-		this.influence = function (player) {
-			var count = 0;
-			this.array.forEach(function(modelCell){
-				if (modelCell.owner === player) {count += 1;}
-			});
-			return count / this.array.length;
-		}
-
-		this._updateWinner = function() {
-			for (var i = 1; i <= this.player.length; ++i) {
-				if (this.influence(i) > 0.5) { this.winner = i; return; }
-			};
-			this.winner = API.NO_PLAYER;
-		};
-	}
-
-	Model.prototype.equals = function (other) {
-		if (other === null || other === undefined) {return false;}
-		var retVal = true;
-		for (var i = other.array.length - 1; i >= 0; --i) {
-			if ( !this.array[i].equals(other.array[i]) ){
-				console.log('Inequality at: ', this.coordinateSystem.toOffsetCoordinates(i));
-				console.log(i, this.array[i], other.array[i]);
-
-				// return false;
-				retVal = false;
-			}
-		};
-		return retVal;
-	}
-
-	Model.prototype.nextPlayer = function () {
-		this.currentPlayer = (this.currentPlayer % (this.player.length - 1)) + 1;
-	}
-
-	Model.prototype.clone = function () {
-		var newModel = new Model(this.conf, this.palette, this.coordinateSystem, this.player);
-		newModel.currentPlayer = this.currentPlayer;
-		newModel.winner        = this.winner;
-		for (var i = this.array.length - 1; i >= 0; i--) {
-			var oldModelCell = this.array[i];
-			newModel.array[i] = new Cell(oldModelCell.color, oldModelCell.owner);
-		};
-		return newModel;
-	}
-
-	Model.prototype.getCell = function (coordinate) {
-			var coordinate = coords[i];
-			var linearCoordinate = this.coordinateSystem.toLinearCoordinates(coordinate);
-
-			if (this.coordinateSystem.inBounds(linearCoordinate)) {
-				return this.array[linearCoordinate];
-			}
-
-			return null;
-	}
-
-	Model.prototype.getCells = function (coords) {
-		var retVal = [];
-		for (var i=coords.length-1; i >= 0; --i) {
-			var cell = this.getCell(coords[i]);
-			if (cell !== null) { retVal.push( cell );}
-		}
-		return array;
-	}
-
 	function Game (configuration, renderer) {
 
 		var self = this;
@@ -272,18 +22,18 @@ var HexGame = function () {
 
 		this.player = [
 				{
-					num        : API.PLAYER_0,
+					num        : HexUtil.PLAYER_0,
 					startCoord : null,
 					color      : null,
 				},
 				{
-					num: API.PLAYER_1,
-					startCoord: getStartingOffsetCoord(API.PLAYER_1, this.grid),
+					num: HexUtil.PLAYER_1,
+					startCoord: getStartingOffsetCoord(HexUtil.PLAYER_1, this.grid),
 					color: configuration.game.player[1].color,
 				},
 				{
-					num: API.PLAYER_2,
-					startCoord: getStartingOffsetCoord(API.PLAYER_2, this.grid),
+					num: HexUtil.PLAYER_2,
+					startCoord: getStartingOffsetCoord(HexUtil.PLAYER_2, this.grid),
 					color: configuration.game.player[2].color,
 				}
 		];
@@ -294,16 +44,15 @@ var HexGame = function () {
 		this.grid  = new HexGrid( this.conf.grid, null );
 		this.coordinateSystem = this.grid.coordinateSystem;
 
-		this.model = new Model(	this.conf.grid,
-								this.conf.game.colorPalette,
-								this.coordinateSystem,
-								this.player
-							  );
-		this.ai = new ArtificialIntelligence(this.player, this.model, 'greedy')
+		this.model = new HexModel(	this.conf.grid,
+									this.conf.game.colorPalette,
+									this.coordinateSystem,
+									this.player
+							  	);
 
 		this.currentPlayer = this.player[1];
-		this.model.setStart(this.player[1].startCoord, API.PLAYER_1);
-		this.model.setStart(this.player[2].startCoord, API.PLAYER_2);
+		this.model.setStart(this.player[1].startCoord, HexUtil.PLAYER_1);
+		this.model.setStart(this.player[2].startCoord, HexUtil.PLAYER_2);
 		
 		this.grid.getCell(this.player[1].startCoord).highlight(true);
 		this.grid.getCell(this.player[2].startCoord).highlight(true);
@@ -423,7 +172,7 @@ var HexGame = function () {
 	}
 
 	Game.prototype.logic = function (newColor) {
-		if (this.model.winner !== API.NO_PLAYER) {return;}
+		if (this.model.winner !== HexUtil.NO_PLAYER) {return;}
 
 		// Update state
 		this.flood( this.currentPlayer.num, newColor );
@@ -440,141 +189,10 @@ var HexGame = function () {
 		// Human move
 		this.logic(newColor);
 
-		// AI move
-		var aiColor = this.ai.getMove();
-		this.logic(aiColor);
-	}
-
-	function ArtificialIntelligence (player, model, strategy) {
-
-		var self = this;
-
-		this.player = player;
-		this.model  = model;
-		this.impl   = null;
-
-		this.RandomStrategy = function (lookahead) {
-			this.model        = self.model;
-			this.colorPalette = self.model.colorPalette;
-			this.lookahead    = lookahead; /*Unused in this strat.*/
-
-			this.getMove = function () {
-				var numColors = this.colorPalette.length;
-				var index  = Math.floor(Math.random()*numColors);
-				return this.colorPalette[index];
-			}
-		} /* End RandomStrategy */
-
-		this.MiniMaxStrategy = function (lookahead) {
-			this.model        = self.model;
-			this.colorPalette = self.model.colorPalette;
-
-			function Evaluation (colorIndex, score) {
-				this.colorIndex = colorIndex;
-				this.score      = score;
-			}
-
-			// Model should be a class defining the possible moves...
-			// So flood and such should be defined on the model.
-
-			function minimax ( colorIndex, level ) {
-				var color;
-
-				// If depth exceeded, return (colorIndex, evaluation)
-
-				// For color in Palette
-				// 		Update Board, then recurse
-				// 		If largest score, record it
-				// Return (colorIndex, largest score).
-
-			}
-
-			this.getMove = function () {
-				return minimax().colorIndex
-			}
-		} /* End MiniMaxStrategy */
-
-		this.GreedyStrategy = function (lookahead) {
-			this.lookahead    = lookahead;
-
-			function greedy ( currentLevel, model ) {
-				if (currentLevel === null || currentLevel === undefined || isNaN(currentLevel)) {currentLevel = 0;}
-				if (model === null || model === undefined) {model = self.model;}
-
-				if (currentLevel >= lookahead) {
-					var influence = model.influence(self.model.currentPlayer);
-					return {color:null, influence:influence};
-				}
-
-				// console.log(self.model.currentPlayer)
-
-				var color;
-
-				var bestInfluence = 0;
-				var bestColor     = 0;
-				self.model.palette.forEach(function(color){
-					var newModel;
-					newModel = model.clone();
-					newModel.makeMove(self.model.currentPlayer, color);
-
-					var newLocalInfluence = newModel.influence(self.model.currentPlayer);
-					var oldLocalInfluence = model.influence(self.model.currentPlayer);
-
-					// Local win condition
-					var currentInfluence = newModel.influence(self.model.currentPlayer);
-					if (currentInfluence > bestInfluence) {
-						bestInfluence = currentInfluence;
-						bestColor     = color;
-					}
-
-					// Global optimization
-					var influence = greedy(currentLevel + 1, newModel).influence;
-					if (influence > bestInfluence && newLocalInfluence > oldLocalInfluence) {
-						bestInfluence = influence;
-						bestColor     = color;
-					}
-				});
-
-				if (bestInfluence > 0) {
-					return {color:bestColor, influence:bestInfluence};
-				} else {
-					var numColors = self.model.palette.length;
-					var newIndex  = Math.floor(Math.random()*numColors);
-					var newColor  = self.model.palette[newIndex];
-					return {color:newColor, influence:0};
-				}
-			}
-
-			this.getMove = function () {
-				var bestMove = greedy(0);
-				var color = bestMove.color;
-				console.log(bestMove);
-
-				return color;
-			}
-		} /* End GreedyStrategy */
-
-	this.getMove = function () {
-		return this.impl.getMove();
-	}
-
-	this.setImplementation = function (impl, lookahead) {
-		switch (impl) {
-			case 'random' : this.impl = new this.RandomStrategy(lookahead);  break;
-			case 'greedy' : this.impl = new this.GreedyStrategy(lookahead);  break;
-			case 'minimax': this.impl = new this.MiniMaxStrategy(lookahead); break;
-			default: this.impl = new this.GreedyStrategy(lookahead); break;
-		}
-	}
-	this.setImplementation(strategy, 3);
-
 	}
 	
 	// External API
 	API.Game  = Game;
-	API.Model = Model;
-	API.AI = ArtificialIntelligence;
-
 
 	return API;
 }();

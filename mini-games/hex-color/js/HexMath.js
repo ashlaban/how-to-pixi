@@ -98,13 +98,23 @@ var HexMath = (function () {
 	    for (var i = 0; i < 6; ++i) {
 	    	dir = direction.asArray[i];
 	        for (var j = 0; j < r; ++j) {
-	            // if (coordinateSystem.cube.inBounds(cube)) { results.push(cube); }
-	            results.push(cube);
+	            if (coordinateSystem.cube.inBounds(cube)) { results.push(cube); }
+	            // results.push(cube);
 	            cube = {x:cube.x + dir.x, y:cube.y + dir.y, z:cube.z + dir.z,}
 	        }
 	    }
 
 		return results;
+	}
+
+	function hexagonSpiral(p0, r, coordinateSystem) {
+		p0 = coordinateSystem._toCubeCoordinates(p0);
+
+	    var results = [p0];
+    	for (var i = 1; i <= r; ++i) {
+    		results.concat(hexagon(p0, i, coordinateSystem))
+    	};
+    	return results
 	}
 
 	function hexagonDisc(p0, r, coordinateSystem) {
@@ -143,9 +153,10 @@ var HexMath = (function () {
 
 		directionForPoints: directionForPoints,
 
-		dist        : distance,
-		hexagon     : hexagon,
-		hexagonDisc : hexagonDisc,
+		dist          : distance,
+		hexagon       : hexagon,
+		hexagonSpiral : hexagonSpiral,
+		hexagonDisc   : hexagonDisc,
 
 		getNeighbour : getNeighbour,
 		getNeighbours: getNeighbours,

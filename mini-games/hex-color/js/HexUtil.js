@@ -1,4 +1,12 @@
-
+HexUtil = {};
+HexUtil.NO_PLAYER = 0;
+HexUtil.PLAYER_1  = 1;
+HexUtil.PLAYER_2  = 2;
+HexUtil.PLAYER_3  = 3;
+HexUtil.PLAYER_4  = 4;
+HexUtil.PLAYER_5  = 5;
+HexUtil.PLAYER_6  = 6;
+HexUtil.PLAYER_7  = 7;
 
 function log() {
 
