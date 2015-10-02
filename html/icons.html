@@ -1,0 +1,63 @@
+<html>
+<head>
+    <title>Icons Test</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- <link rel="stylesheet" type="text/css" href="../lib/bootstrap.min.css"> -->
+    <link rel="stylesheet" type="text/css" href="../css/HexStyle.css">
+
+    <script src="../lib/pixi.js"></script>
+</head>
+
+<body>
+    <div id='main' class='flex-container flex-vertical'>
+    <div id='content-wrapper'>
+        <div class='well top'>
+            <h1>Icons Test Page</h1>
+        </div>
+        <div id='content' class='flex-container flex-vertical'>
+            <div id="canvas-wrapper" class='well middle'></div>
+            <div id='side-panel' class='flex-container flex-vertical well middle'></div>
+        </div>
+        <div class='well bottom'>
+            <h2>First section</h2>
+            <hr class="section-divider">
+            <p>Just adding some test text to the bottom of the page. I am also going to fill the whole paragraph, just to try out the layout and such with different fonts and settings.</p>
+            <p>This is a second paragraph, aimed to test the spacing between two different paragraphs.</p>
+            <h2>Second section</h2>
+            <hr class="section-divider">
+            <p>A third paragraph with some additional information and text and things like this. Now the documents is starting to look like something that could have been part of the description for a mini-game.</p>
+        </div>
+    </div>
+    </div>
+    <script>
+    // Set up the PIXI renderer
+    var canvas = {width: 300, height: 300};
+    var renderer = new PIXI.WebGLRenderer   (
+                                                canvas.width,
+                                                canvas.height,
+                                                {
+                                                    transparent : true,
+                                                    antialias   : true,
+                                                    resolution  : window.devicePixelRatio
+                                                }
+                                            );
+    document.getElementById('canvas-wrapper').appendChild(renderer.view);
+    renderer.view.style.width  = canvas.width;
+    renderer.view.style.height = canvas.height;
+
+    // Kick-start the rendering process
+    animate();
+
+    function animate() {
+        requestAnimationFrame(animate);
+    }
+
+    renderer.view.onclick = function(ev) {};
+
+    
+    
+    </script>
+</body>
+</html>
