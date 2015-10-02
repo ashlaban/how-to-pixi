@@ -68,8 +68,8 @@ function HexModel ( conf, colorPalette, coordinateSystem, player ) {
 			modified.push(cubeCoord);
 
 			// Custom termination check
-			if (customLogic.shouldTerminate(self, cubeCoord, linearCoord, modelCell)) {continue;}
-			customLogic.updateCell(self, cubeCoord, linearCoord );
+			if (customLogic.shouldTerminate(modelCell)) {continue;}
+			customLogic.updateCell(modelCell);
 
 			var neighbours = HexMath.getNeighbours(cubeCoord, self.coordinateSystem);
 			for (var i=neighbours.length-1; i >= 0; --i) {
@@ -95,15 +95,14 @@ function HexModel ( conf, colorPalette, coordinateSystem, player ) {
 		var customLogic = {};
 		customLogic.originalOwner = originalOwner;
 		customLogic.newColor      = newColor;
-		customLogic.shouldTerminate = function (model, cubeCoord, linearCoord, modelCell) {
+		customLogic.shouldTerminate = function (modelCell) {
 			return (modelCell.owner !== originalOwner && !(modelCell.owner === 0 && modelCell.color === newColor));
 		}
-		customLogic.updateCell = function (model, cubeCoord, linearCoord) {
-			self.array[linearCoord].color = newColor;
-			self.array[linearCoord].owner = originalOwner;
+		customLogic.updateCell = function (modelCell) {
+			modelCell.color = newColor;
+			modelCell.owner = originalOwner;
 		}
 
-		console.log('test')
 		var modified = flood (cubeCoord, customLogic);
 
 		this._updateWinner();
