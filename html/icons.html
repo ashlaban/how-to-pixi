@@ -8,6 +8,9 @@
     <link rel="stylesheet" type="text/css" href="../css/HexStyle.css">
 
     <script src="../lib/pixi.js"></script>
+
+    <script src="../js/HexMath.js"></script>
+    <script src="../js/HexCell.js"></script>
 </head>
 
 <body>
@@ -46,6 +49,15 @@
     document.getElementById('canvas-wrapper').appendChild(renderer.view);
     renderer.view.style.width  = canvas.width;
     renderer.view.style.height = canvas.height;
+
+    // TODO: Paint an example icon.
+    var position = {x:150, y:150};
+    var scale    = {x:100, y:100};
+    var color    = 0xbb55bb;
+    var conf     = {line: {color: 0, width: 0.05}, edge: {color:0, width:0}};
+    cell = new HexCell(position, scale, color, conf);
+    cell.draw()
+    cell.renderWith(renderer);
 
     // Kick-start the rendering process
     animate();

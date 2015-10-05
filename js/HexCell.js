@@ -8,13 +8,23 @@ function HexCell( position, scale, color, conf) {
     this._graphics.scale.y = scale.y;
     this.color = color;
 
-    this.outline   = conf.line.color !== undefined;
-    this.lineWidth = conf.line.width;
-    this.lineColor = conf.line.color;
+    this.outline   = false;
+    this.lineWidth = 0;
+    this.lineColor = 0;
 
     this.edges     = [];
-    this.edgeWidth = conf.edge.width;
-    this.edgeColor = conf.edge.color;
+    this.edgeWidth = 0;
+    this.edgeColor = 0;
+
+    if (conf) {
+        this.outline   = conf.line.color !== undefined;
+        this.lineWidth = conf.line.width;
+        this.lineColor = conf.line.color;
+
+        this.edges     = [];
+        this.edgeWidth = conf.edge.width;
+        this.edgeColor = conf.edge.color;
+    }
 
     this._colorStack = [];
 
