@@ -54,9 +54,23 @@
     var position = {x:150, y:150};
     var scale    = {x:100, y:100};
     var color    = 0xbb55bb;
-    var conf     = {line: {color: 0, width: 0.05}, edge: {color:0, width:0}};
+    var conf     = {
+                    stroke: {color:0x00, width:0.05}, 
+                    edge  : {color:0xff, width:0.3},
+                    radial: {
+                             vertex:{color:0x00ff00, width:0.7},
+                             side  :{color:0xff0000, width:0.3}
+                            }
+                   };
     cell = new HexCell(position, scale, color, conf);
-    cell.draw()
+    cell.edges             = [0,1,3,5];
+    cell.radialVertexLines = [2,3];
+    cell.radialSideLines   = [1,3,5];
+    // cell.radialSideLines   = [0,2,4];
+    // for (var i = 100000; i >= 0; i--) {
+        cell.draw();
+    // };
+    
     cell.renderWith(renderer);
 
     // Kick-start the rendering process

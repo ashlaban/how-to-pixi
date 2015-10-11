@@ -30,6 +30,10 @@ var HexMath = (function () {
 	
 	var cos_60 = 0.5;
     var sin_60 = 0.86602540378;
+    var cos_30 = 0.86602540378;
+    var sin_30 = 0.5;
+    var tan_30 = 0.57735026919;
+
 	var hexPoints = [	-1      ,  0      ,
                 	    -cos_60 , -sin_60 , 
                 	     cos_60 , -sin_60 , 
@@ -57,6 +61,85 @@ var HexMath = (function () {
 	hexEdge[3] = hexEdge.south;
 	hexEdge[4] = hexEdge.southWest;
 	hexEdge[5] = hexEdge.northWest;
+
+	// NOTE: The north corner is the corner to the right of the north (   top-most) edge.
+	// NOTE: The south corner is the corner to the left  of the south (bottom-most) edge.
+	var hexRadialLineVertex = {
+		north    : function(t) {return new PIXI.Polygon([ cos_60-t     , -sin_60      ,  cos_60, -sin_60,  cos_60*(1+t)  ,  sin_60*(t-1),  t*(1-cos_60), t*sin_60, -t*cos_60, t*sin_60, -2*t*cos_60,  0        ]);},
+		northEast: function(t) {return new PIXI.Polygon([ 1-t*cos_60   ,  0-t*sin_60  ,  1     ,       0,  1-t*cos_60    ,  t*sin_60    , -t*cos_60    , t*sin_60, -t       , 0       , -t*cos_60  , -t*sin_60 ]);},
+		southEast: function(t) {return new PIXI.Polygon([ cos_60*(1+t) ,  sin_60*(1-t),  cos_60,  sin_60,  cos_60-t      ,  sin_60      , -t           , 0       , -t*cos_60,-t*sin_60,  t*cos_60  , -t*sin_60 ]);},
+		south    : function(t) {return new PIXI.Polygon([-cos_60*(t+1) ,  sin_60*(1-t), -cos_60,  sin_60,  (2*t-1)*cos_60,  sin_60      ,  2*t*cos_60  , 0       , t*cos_60 ,-t*sin_60, -t*cos_60  , -t*sin_60 ]);},
+		southWest: function(t) {return new PIXI.Polygon([-1+t*cos_60   , -sin_60*t    , -1     ,       0, -1+t*cos_60    ,  sin_60*t    ,  t*cos_60    , sin_60*t, t        , 0       ,  t*cos_60  , -sin_60*t ]);},
+		northWest: function(t) {return new PIXI.Polygon([-cos_60+t     , -sin_60      , -cos_60, -sin_60, -(t+1)*cos_60  ,  (t-1)*sin_60, -t*cos_60    , sin_60*t, t*cos_60 , sin_60*t,  t         ,  0        ]);}, }
+	hexRadialLineVertex[0] = hexRadialLineVertex.north;
+	hexRadialLineVertex[1] = hexRadialLineVertex.northEast;
+	hexRadialLineVertex[2] = hexRadialLineVertex.southEast;
+	hexRadialLineVertex[3] = hexRadialLineVertex.south;
+	hexRadialLineVertex[4] = hexRadialLineVertex.southWest;
+	hexRadialLineVertex[5] = hexRadialLineVertex.northWest;
+
+	var hexRadialLineSide = {
+		north    : function(t) {return new PIXI.Polygon([
+			-t*cos_60      , -sin_60    ,
+			 t*cos_60      , -sin_60    ,
+			 t*cos_60      ,  0         ,
+			 t*cos_60/2    ,  t*sin_60/2,
+			-t*cos_60/2    ,  t*sin_60/2,
+			-t*cos_60      ,  0         ,
+			]);},
+
+		northEast: function(t) {return new PIXI.Polygon([
+			 1-(t+1)*cos_60/2, -(t+1)*sin_60/2,
+			 1+(t-1)*cos_60/2,  (t-1)*sin_60/2,
+			 t*cos_60/2      ,  t*sin_60/2    ,
+			-t*cos_60/2      ,  t*sin_60/2    ,
+			-t*cos_60        ,  0             ,
+			-t*cos_60/2      , -t*sin_60/2    ,
+			]);},
+		
+		southEast: function(t) {return new PIXI.Polygon([
+		    (3+t)*cos_60/2,  (1-t)*sin_60/2,
+		    (3-t)*cos_60/2,  (1+t)*sin_60/2,
+		    -cos_60/2*t   ,  sin_60/2*t    ,
+		    -cos_60*t     ,  0             ,
+		    -cos_60/2*t   , -sin_60/2*t    ,
+		     cos_60/2*t   , -sin_60/2*t    ,
+		    ]);},
+		
+		south    : function(t) {return new PIXI.Polygon([
+			 t*cos_60      ,  sin_60    ,
+			-t*cos_60      ,  sin_60    ,
+			-t*cos_60      ,  0         ,
+			-t*cos_60/2    , -t*sin_60/2,
+			 t*cos_60/2    , -t*sin_60/2,
+			 t*cos_60      ,  0         ,
+			]);},
+
+		southWest: function(t) {return new PIXI.Polygon([
+			 -(1-(t+1)*cos_60/2),  (t+1)*sin_60/2,
+			 -(1+(t-1)*cos_60/2), -(t-1)*sin_60/2,
+			-t*cos_60/2      , -t*sin_60/2    ,
+			 t*cos_60/2      , -t*sin_60/2    ,
+			 t*cos_60        ,  0             ,
+			 t*cos_60/2      ,  t*sin_60/2    ,
+			]);},
+
+		northWest: function(t) {return new PIXI.Polygon([
+		    -(3+t)*cos_60/2, -(1-t)*sin_60/2,
+		    -(3-t)*cos_60/2, -(1+t)*sin_60/2,
+		     cos_60/2*t    , -sin_60/2*t,
+		     cos_60*t      ,  0,
+		     cos_60/2*t    ,  sin_60/2*t,
+		    -cos_60/2*t    ,  sin_60/2*t,
+		    ]);},
+	}
+		
+	hexRadialLineSide[0] = hexRadialLineSide.north;
+	hexRadialLineSide[1] = hexRadialLineSide.northEast;
+	hexRadialLineSide[2] = hexRadialLineSide.southEast;
+	hexRadialLineSide[3] = hexRadialLineSide.south;
+	hexRadialLineSide[4] = hexRadialLineSide.southWest;
+	hexRadialLineSide[5] = hexRadialLineSide.northWest;
 
 	function directionForPoints(p0, p1, coordinateSystem) {
 		p0 = coordinateSystem.toCubeCoordinates(p0);
@@ -167,7 +250,9 @@ var HexMath = (function () {
 		hexOutlinePoints : hexOutlinePoints,
 		hexShape         : hexShape,
 		hexOutlineShape  : hexOutlineShape,
-		hexEdge : hexEdge,
+		hexEdge            : hexEdge,
+		hexRadialLineVertex: hexRadialLineVertex,
+		hexRadialLineSide  : hexRadialLineSide,
 	};
 
 	return API;

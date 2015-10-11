@@ -8,22 +8,38 @@ function HexCell( position, scale, color, conf) {
     this._graphics.scale.y = scale.y;
     this.color = color;
 
-    this.outline   = false;
-    this.lineWidth = 0;
-    this.lineColor = 0;
+    this.radialVertexLines     = [];
+    this.radialVertexLineWidth = 0;
+    this.radialVertexLineColor = 0;
+
+    this.radialSideLines     = [];
+    this.radialSideLineWidth = 0;
+    this.radialSideLineColor = 0;
 
     this.edges     = [];
     this.edgeWidth = 0;
     this.edgeColor = 0;
 
+    this.stroke      = false;
+    this.strokeWidth = 0;
+    this.strokeColor = 0;
+
     if (conf) {
-        this.outline   = conf.line.color !== undefined;
-        this.lineWidth = conf.line.width;
-        this.lineColor = conf.line.color;
+        this.radialVertexLines     = [];
+        this.radialVertexLineWidth = conf.radial.vertex.width;
+        this.radialVertexLineColor = conf.radial.vertex.color;
+
+        this.radialSideLines     = [];
+        this.radialSideLineWidth = conf.radial.side.width;
+        this.radialSideLineColor = conf.radial.side.color;
 
         this.edges     = [];
         this.edgeWidth = conf.edge.width;
         this.edgeColor = conf.edge.color;
+
+        this.stroke      = conf.stroke.color !== undefined;
+        this.strokeWidth = conf.stroke.width;
+        this.strokeColor = conf.stroke.color;
     }
 
     this._colorStack = [];
@@ -67,13 +83,36 @@ HexCell.prototype.draw = function () {
     this._graphics.drawShape(HexMath.hexShape);
     this._graphics.endFill();
 
+    // Radial lines to vertecies
+    if (this.radialVertexLines.length) {
+        this._graphics.beginFill(this.radialVertexLineColor);
+        for (var i = this.radialVertexLines.length - 1; i >= 0; --i) {
+            var line      = this.radialVertexLines[i];
+            var edgeShape = HexMath.hexRadialLineVertex[line](this.radialVertexLineWidth);
+            this._graphics.drawShape(edgeShape);
+        };
+        this._graphics.endFill();
+    }
+
+    // Radial lines to sides
+    if (this.radialSideLines.length) {
+        this._graphics.beginFill(this.radialSideLineColor);
+        for (var i = this.radialSideLines.length - 1; i >= 0; --i) {
+            var line      = this.radialSideLines[i];
+            var edgeShape = HexMath.hexRadialLineSide[line](this.radialSideLineWidth);
+            this._graphics.drawShape(edgeShape);
+        };
+        this._graphics.endFill();
+    }
+
     // Specific edges
-    if (this.edges) {
-        var self = this;
+    if (this.edges.length) {
         this._graphics.beginFill(this.edgeColor);
-        this.edges.forEach(function(val){
-            self._graphics.drawShape(HexMath.hexEdge[val](self.edgeWidth));
-        });
+        for (var i = this.edges.length - 1; i >= 0; --i) {
+            var edge      = this.edges[i];
+            var edgeShape = HexMath.hexEdge[edge](this.edgeWidth);
+            this._graphics.drawShape(edgeShape);
+        };
         this._graphics.endFill();
     }
 
