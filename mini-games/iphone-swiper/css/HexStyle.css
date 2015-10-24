@@ -1,0 +1,132 @@
+
+/*
+ * Color-theme:
+ * #2C5D6F
+ * #3C6D7F
+ * #4C7D8F
+ */
+
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
+
+* {
+    box-sizing: border-box;
+    font-family: 'Open Sans', Helvetica, sans-serif;
+    font-weight: 400;
+}
+
+/* === tag === */
+
+body {
+    background-color: #2C5D6F;
+}
+h1,h2,h3,h4,h5,h6 {
+    font-weight: 700;
+}
+h1 {
+    margin: 0.5em;
+    text-align: center;
+}
+h2 {
+    margin-bottom: 0.5em;
+    padding-left : 0.5em;
+    padding-right: 0.5em;
+}
+p {
+    text-align: justify;
+    padding-right: 2.5em;
+    padding-left : 2.5em;
+}
+
+/* === named components === */
+#content-wrapper {
+    max-width: 620px;
+
+    padding-top   : 1em;
+    padding-bottom: 1em;
+    margin-top    : 1em;
+    margin-bottom : 1em;
+
+    padding-left : 0em;
+    padding-right: 0em;
+
+    border-radius: 10px;
+    background-color: #2C5D6F;
+}
+
+#content    {width: 100%; min-width: 300px;}
+#side-panel {width: 100%; min-width: 300px;}
+.well       {width: 100%; min-width: 300px;}
+@media only screen and (min-width: 620px) {
+    #content    {max-width: 620px;}
+    #side-panel {max-width: 620px;}
+    .well       {max-width: 620px;}
+    #content-wrapper {
+        padding-left : 2em;
+        padding-right: 2em;
+    }
+}
+
+#canvas-wrapper {
+    display        : -webkit-flex;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+
+    padding: 10px;
+    margin : 0px;
+}
+
+/* === well === */
+.well {
+    padding: 10px;
+    background-color: #3C6D7F;
+    border-radius: 10px;
+
+    border-width : 1px;
+    border-style : solid;
+    border-color : #000000;
+}
+
+/* === flexbox === */
+@media only screen and (min-device-width: 620px) {
+    .flex-container {    
+        display        : -webkit-flex;
+        display        : flex;
+        -webkit-align-items    : center;
+        -webkit-justify-content: center;
+        align-items    : center;
+        justify-content: center;
+
+        margin: 0px;
+    }
+    .flex-vertical {
+        -webkit-flex-direction: column;
+        flex-direction: column;
+    }
+}
+
+/* === border === */
+.top {
+    border-radius: 1em 1em 0px 0px;
+}
+.middle {
+    border-radius: 0px 0px 0px 0px;
+    border-top-width    : 0px;
+    border-bottom-width : 0px;
+}
+.bottom {
+    border-radius: 0px 0px 1em 1em;
+}
+
+/* === text utilities === */
+.section-divider {
+    height: 0.25em;
+    background-color: #2C5D6F;
+    margin-right  : 0.5em;
+    margin-left   : 0.5em;
+    margin-top    : 0em;
+    margin-bottom : 0em;
+    border-style: solid;
+    border-color: #2C5D6F;
+    border-radius: 0.25em;
+}
