@@ -2,8 +2,6 @@
 
 var HexMath = (function () {
 
-	var API = {};
-
 	var direction = {
 		north    : {x: 0, y: 1, z:-1},
 		northEast: {x: 1, y: 0, z:-1},
@@ -229,6 +227,19 @@ var HexMath = (function () {
 		return hexagon(p0, 1, coordinateSystem);	
 	}
 
+	// === Easing functions ===
+	// ========================
+	// Courtesy of "http://gizma.com/easing"
+	// ========================
+	function easeInOutExp (t, x, dx, duration) {
+		t /= duration/2;
+		if (t < 1) return dx/2 * Math.pow( 2, 10 * (t - 1) ) + x;
+		t--;
+		return dx/2 * ( -Math.pow( 2, -10 * t) + 2 ) + x;
+	};
+	// ===========================
+	// == END Easing functions ===
+
 	// Exported API
 	var API = {
 
@@ -253,6 +264,9 @@ var HexMath = (function () {
 		hexEdge            : hexEdge,
 		hexRadialLineVertex: hexRadialLineVertex,
 		hexRadialLineSide  : hexRadialLineSide,
+
+		// Easing
+		easeInOutExp : easeInOutExp,
 	};
 
 	return API;

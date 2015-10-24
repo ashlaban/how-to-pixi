@@ -117,10 +117,10 @@ HexCell.prototype.draw = function () {
     }
 
     // Stroke
-    if (this.outline) {
-        this._graphics.lineStyle( this.lineWidth, this.lineColor, 1 );
+    if (this.stroke) {
+        this._graphics.lineStyle( this.strokeWidth, this.strokeColor, 1 );
         this._graphics.drawShape( HexMath.hexOutlineShape );
-        this._graphics.lineStyle( this.lineWidth, this.lineColor, 0 );
+        this._graphics.lineStyle( this.strokeWidth, this.strokeColor, 0 );
     };
 
     // Text
