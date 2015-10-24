@@ -138,9 +138,9 @@ var HexUtil = function () {
 		return;
 	}
 
-	LinkedList.prototype.iterator = function* (){
+	// LinkedList.prototype.iterator = function* (){
 		
-	}
+	// }
 
 	function LinkedListNode (data) {
 		this.next = null;
