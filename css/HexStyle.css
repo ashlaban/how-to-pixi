@@ -53,10 +53,12 @@ p {
     background-color: #2C5D6F;
 }
 
-#content    {width: 100%; min-width: 300px;}
-#side-panel {width: 100%; min-width: 300px;}
-.well       {width: 100%; min-width: 300px;}
+#content-wrapper {width: 100%;}
+#content    {width: 100%; /*min-width: 300px;*/}
+#side-panel {width: 100%; /*min-width: 300px;*/}
+.well       {width: 100%; /*min-width: 300px;*/}
 @media only screen and (min-width: 620px) {
+    #content-wrapper {max-width: 620px;}
     #content    {max-width: 620px;}
     #side-panel {max-width: 620px;}
     .well       {max-width: 620px;}
