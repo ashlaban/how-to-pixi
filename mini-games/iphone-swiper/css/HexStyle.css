@@ -69,8 +69,10 @@ p {
 #canvas-wrapper {
     display        : -webkit-flex;
     display        : flex;
-    align-items    : center;
+    -webkit-justify-content: center;
     justify-content: center;
+
+    overflow-x: hidden;
 
     padding: 10px;
     margin : 0px;
