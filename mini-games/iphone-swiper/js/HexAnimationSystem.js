@@ -32,7 +32,7 @@ var HexAnimationSystem = function () {
             isExpired = data.update(dt, currentTime);
 
             if (isExpired) {
-                animList.remove(node);
+                this.animList.remove(node);
             }
 
             node = nextNode;
@@ -41,7 +41,7 @@ var HexAnimationSystem = function () {
 
     AnimationSystem.prototype.update = function (dt, currentTime) {
         var node, data;
-        node = animList.first;
+        node = this.animList.first;
 
         while (node !== null) {
             data = node.data;
@@ -78,7 +78,7 @@ var HexAnimationSystem = function () {
             this.prevTime = currentTime;
             return;
         }
-        
+
         dt = currentTime - this.prevTime;
         this.prevTime = currentTime;
 

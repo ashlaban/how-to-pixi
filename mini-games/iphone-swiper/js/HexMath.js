@@ -231,6 +231,12 @@ var HexMath = (function () {
 	// ========================
 	// Courtesy of "http://gizma.com/easing"
 	// ========================
+	function easeInOutQuad (t, x, dx, duration) {
+		t /= duration/2;
+		if (t < 1) return dx/2*t*t + x;
+		t--;
+		return -dx/2 * (t*(t-2) - 1) + x;
+	};
 	function easeInOutExp (t, x, dx, duration) {
 		t /= duration/2;
 		if (t < 1) return dx/2 * Math.pow( 2, 10 * (t - 1) ) + x;
@@ -266,6 +272,7 @@ var HexMath = (function () {
 		hexRadialLineSide  : hexRadialLineSide,
 
 		// Easing
+		easeInOutQuad : easeInOutQuad,
 		easeInOutExp : easeInOutExp,
 	};
 

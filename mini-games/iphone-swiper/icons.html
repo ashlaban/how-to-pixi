@@ -2,11 +2,12 @@
 <head>
     <title>Icons Test</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1" />
 
     <link rel="stylesheet" type="text/css" href="css/HexStyle.css">
 
     <script src="lib/pixi.js"></script>
+    <script src="lib/hammer.min.js"></script>
 
     <script src="js/HexUtil.js"></script>
     <script src="js/HexAnimationSystem.js"></script>
@@ -53,8 +54,10 @@
     renderer.view.style.width  = canvas.width;
     renderer.view.style.height = canvas.height;
 
+    var container = new PIXI.Container();
+
     // TODO: Paint an example icon.
-    var position = {x:150, y:150};
+    var position = {x:canvas.width/2, y:canvas.height/2};
     var scale    = {x:100, y:100};
     var color    = 0x0069A9;
     var conf     = {
@@ -76,10 +79,61 @@
     cell.edges             = [];
     cell.radialVertexLines = [1, 4];
     cell.radialSideLines   = [0, 3];
-    // for (var i = 100000; i >= 0; i--) {
-        cell.draw();
-    // };
-    cell.renderWith(renderer);
+    cell.draw();
+    // cell.renderWith(renderer);
+
+    position = {x:1000+canvas.width/2, y:canvas.height/2};
+    scale    = {x:100, y:100};
+    color    = 0xff69A9;
+    conf     = {
+                    stroke: {color:0x00, width:0.01}, 
+                    edge  : {color:0xdd0000, width:0.2},
+                    radial: {
+                             vertex:{color:0xffcd00, width:0.18},
+                             side  :{color:0xffcd00, width:0.3}
+                            }
+                   };
+    gridconf = {
+            position : { x: 50, y: 60 },
+            scale    : { x: 30, y: 30 },
+            size     : { w: 10, h: 5 },
+        }
+    gridconf.cell = conf;
+    cell2 = new HexCell(position, scale, color, conf);
+    cell2.edges             = [];
+    cell2.radialVertexLines = [1, 4];
+    cell2.radialSideLines   = [0, 3];
+    cell2.draw();
+    // cell2.renderWith(renderer);
+     
+    position = {x:-1000+canvas.width/2, y:canvas.height/2};
+    scale    = {x:100, y:100};
+    color    = 0x009949;
+    conf     = {
+                    stroke: {color:0x00, width:0.01}, 
+                    edge  : {color:0xdd0000, width:0.2},
+                    radial: {
+                             vertex:{color:0xffcd00, width:0.18},
+                             side  :{color:0xffcd00, width:0.3}
+                            }
+                   };
+    gridconf = {
+            position : { x: 50, y: 60 },
+            scale    : { x: 30, y: 30 },
+            size     : { w: 10, h: 5 },
+        }
+    gridconf.cell = conf;
+    cell3 = new HexCell(position, scale, color, conf);
+    cell3.edges             = [];
+    cell3.radialVertexLines = [1, 4];
+    cell3.radialSideLines   = [0, 3];
+    cell3.draw();
+    
+    container.addChild(cell._graphics);
+    container.addChild(cell2._graphics);
+    container.addChild(cell3._graphics);
+    renderer.render(container);
+
     
     // function randomiseIconCell(offsetCoord, linearCoord, cell) {
     //     function randomInt(min, max) {
@@ -123,7 +177,7 @@
     // grid.draw();
     // grid.renderWith(renderer);
 
-    function WiggleCellAnimationFactory (cell, duration, span) {
+    function WiggleCellAnimationFactory (cell, duration, span, isRepeating) {
 
         var startTime = performance.now();
         var endTime   = startTime + duration;
@@ -136,12 +190,12 @@
 
             var t = currentTime - startTime;
 
-            var x = HexMath.easeInOutExp(t, startX, span, duration);
+            var x = HexMath.easeInOutQuad(t, startX, span, duration);
             cell._graphics.position.x = x;
-            cell.renderWith(renderer);
+            renderer.render(container); // TODO: abstract rendering of scene!
 
             // Repeating function
-            if (t > duration) {
+            if (isRepeating && t > duration) {
                 startTime = performance.now();
                 endTime   = startTime + duration;
 
@@ -151,6 +205,8 @@
 
                 span     *= -1;
             }
+            
+            if (!isRepeating && t>duration) return true;
 
             return false;
         }
@@ -158,14 +214,30 @@
     }
 
     var animationSystem = new HexAnimationSystem.AnimationSystem();
-    animationSystem.add(WiggleCellAnimationFactory(cell, 2000, 200));
+    // animationSystem.add(WiggleCellAnimationFactory(cell, 2000, 200));
     
     // Kick-start the animation
     animationSystem.animate();
 
-    renderer.view.onclick = function(ev) {
+    var mc = Hammer(renderer.view);
+    mc.on('swipe', function (ev) {
+        var dur  = 850;
+        var dist = 1000;
+        if (ev.angle > 135 || ev.angle < -135) {
+            animationSystem.add(WiggleCellAnimationFactory(cell , dur, -dist));
+            animationSystem.add(WiggleCellAnimationFactory(cell2, dur, -dist));
+            animationSystem.add(WiggleCellAnimationFactory(cell3, dur, -dist));
+        } else if (ev.angle < 45 || ev.angle > -45) {
+            animationSystem.add(WiggleCellAnimationFactory(cell , dur,  dist));
+            animationSystem.add(WiggleCellAnimationFactory(cell2, dur,  dist));
+            animationSystem.add(WiggleCellAnimationFactory(cell3, dur,  dist));
+        }
+        // console.log(ev)
+    })
 
-    };
+    // document.body.ontouchstart = function(ev) {
+    //     console.log('test')
+    // };
     // renderer.view.onmousemove = function(ev) {
     //     isCellDirty = true;
 
