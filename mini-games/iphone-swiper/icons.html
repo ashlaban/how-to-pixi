@@ -51,8 +51,12 @@
                                                 }
                                             );
     document.getElementById('canvas-wrapper').appendChild(renderer.view);
-    renderer.view.style.width  = canvas.width;
-    renderer.view.style.height = canvas.height;
+    renderer.view.style.width     = canvas.width;
+    renderer.view.style.height    = canvas.height;
+    renderer.view.style.minWidth  = canvas.width;
+    renderer.view.style.minHeight = canvas.height;
+    renderer.view.style.maxWidth  = canvas.width;
+    renderer.view.style.maxHeight = canvas.height;
 
     var container = new PIXI.Container();
 
