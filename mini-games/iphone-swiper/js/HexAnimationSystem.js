@@ -4,9 +4,10 @@ var HexAnimationSystem = function () {
 
     // === Animation List ===
     // =============================================
-    function AnimationSystem () {
+    function AnimationSystem (renderCallback) {
         this.prevTime = -1;
         this.animList = new HexUtil.LinkedList();
+        this.renderCallback = renderCallback;
     };
     /*
      * callback(dt, currentTime)
@@ -83,6 +84,7 @@ var HexAnimationSystem = function () {
         this.prevTime = currentTime;
 
         this.updateAndPurge(dt, currentTime);
+        this.renderCallback();
     };
 
     // =============================================

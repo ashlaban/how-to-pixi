@@ -1,254 +1,392 @@
 <html>
 <head>
-    <title>Icons Test</title>
+	<title>Icons Test</title>
 
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1" />
+	<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" type="text/css" href="css/HexStyle.css">
+	<link rel="stylesheet" type="text/css" href="css/HexStyle.css">
 
-    <script src="lib/pixi.js"></script>
-    <script src="lib/hammer.min.js"></script>
+	<script src="lib/pixi.js"></script>
+	<script src="lib/hammer.min.js"></script>
+	<script src="lib/MersenneTwister.js"></script>
 
-    <script src="js/HexUtil.js"></script>
-    <script src="js/HexAnimationSystem.js"></script>
+	<script src="js/HexUtil.js"></script>
+	<script src="js/HexAnimationSystem.js"></script>
 
-    <script src="js/HexMath.js"></script>
-    <script src="js/HexCoordinate.js"></script>
-    <script src="js/HexCell.js"></script>
+	<script src="js/HexMath.js"></script>
+	<script src="js/HexCoordinate.js"></script>
+	<script src="js/HexCell.js"></script>
 </head>
 
 <body>
-    <div id='main' class='flex-container flex-vertical'>
-    <div id='content-wrapper'>
-        <div class='well top'>
-            <h1>iPhone Swipe Thing</h1>
-        </div>
-        <div id='content' class='flex-container flex-vertical'>
-            <div id="canvas-wrapper" class='well middle'></div>
-            <div id='side-panel' class='flex-container flex-vertical well middle'></div>
-        </div>
-        <div class='well bottom'>
-            <h2>First section</h2>
-            <hr class="section-divider">
-            <p>Just adding some test text to the bottom of the page. I am also going to fill the whole paragraph, just to try out the layout and such with different fonts and settings.</p>
-            <p>This is a second paragraph, aimed to test the spacing between two different paragraphs.</p>
-            <h2>Second section</h2>
-            <hr class="section-divider">
-            <p>A third paragraph with some additional information and text and things like this. Now the documents is starting to look like something that could have been part of the description for a mini-game.</p>
-        </div>
-    </div>
-    </div>
-    <script>
-    // Set up the PIXI renderer
-    var canvas = {width: 500, height: 300};
-    var renderer = new PIXI.WebGLRenderer   (
-                                                canvas.width,
-                                                canvas.height,
-                                                {
-                                                    transparent : true,
-                                                    antialias   : true,
-                                                    resolution  : window.devicePixelRatio
-                                                }
-                                            );
-    document.getElementById('canvas-wrapper').appendChild(renderer.view);
-    renderer.view.style.width     = canvas.width;
-    renderer.view.style.height    = canvas.height;
-    renderer.view.style.minWidth  = canvas.width;
-    renderer.view.style.minHeight = canvas.height;
-    renderer.view.style.maxWidth  = canvas.width;
-    renderer.view.style.maxHeight = canvas.height;
+	<div id='main' class='flex-container flex-vertical'>
+	<div id='content-wrapper'>
+		<div class='well top'>
+			<h1>iPhone Swipe Thing</h1>
+		</div>
+		<div id='content' class='flex-container flex-vertical'>
+			<div id="canvas-wrapper" class='well middle'></div>
+			<div id='side-panel' class='flex-container flex-vertical well middle'></div>
+		</div>
+		<div class='well bottom'>
+			<h2>First section</h2>
+			<hr class="section-divider">
+			<p>Just adding some test text to the bottom of the page. I am also going to fill the whole paragraph, just to try out the layout and such with different fonts and settings.</p>
+			<p>This is a second paragraph, aimed to test the spacing between two different paragraphs.</p>
+			<h2>Second section</h2>
+			<hr class="section-divider">
+			<p>A third paragraph with some additional information and text and things like this. Now the documents is starting to look like something that could have been part of the description for a mini-game.</p>
+		</div>
+	</div>
+	</div>
+	<script>
+	// Set up the PIXI renderer
+	var canvas = {width: 500, height: 300};
+	var renderer = new PIXI.WebGLRenderer   (
+												canvas.width,
+												canvas.height,
+												{
+													transparent : true,
+													antialias   : true,
+													resolution  : window.devicePixelRatio
+												}
+											);
+	document.getElementById('canvas-wrapper').appendChild(renderer.view);
+	renderer.view.style.width     = canvas.width;
+	renderer.view.style.height    = canvas.height;
+	renderer.view.style.minWidth  = canvas.width;
+	renderer.view.style.minHeight = canvas.height;
+	renderer.view.style.maxWidth  = canvas.width;
+	renderer.view.style.maxHeight = canvas.height;
 
-    var container = new PIXI.Container();
+	var container = new PIXI.Container();
 
-    // TODO: Paint an example icon.
-    var position = {x:canvas.width/2, y:canvas.height/2};
-    var scale    = {x:100, y:100};
-    var color    = 0x0069A9;
-    var conf     = {
-                    stroke: {color:0x00, width:0.01}, 
-                    edge  : {color:0xdd0000, width:0.2},
-                    radial: {
-                             vertex:{color:0xffcd00, width:0.18},
-                             side  :{color:0xffcd00, width:0.3}
-                            }
-                   };
-    gridconf = {
-            position : { x: 50, y: 60 },
-            scale    : { x: 30, y: 30 },
-            size     : { w: 10, h: 5 },
-        }
-    gridconf.cell = conf;
+	function CellFactory(position, scale, color, conf) {
+		this.position = position;
+		this.scale    = scale;
+		this.color    = color;
+		this.conf     = conf;
+	}
 
-    cell = new HexCell(position, scale, color, conf);
-    cell.edges             = [];
-    cell.radialVertexLines = [1, 4];
-    cell.radialSideLines   = [0, 3];
-    cell.draw();
-    // cell.renderWith(renderer);
+	CellFactory.prototype.newCell = function(shallowCopy) {
+		if (shallowCopy) {
+			var position = this.position;    
+			var scale = this.scale;
+			var color = this.color;
+			var conf = this.conf;
+		} else {
+			// var position = this.position.clone()
+			var position = {x: this.position.x, y:this.position.y};
+			// var scale = this.scale.clone()
+			var scale = {x: this.scale.x, y:this.scale.y};
+			// var color = this.color.clone()
+			var color = this.color;
+			// var conf = this.conf.clone()
+			var conf = {
+				stroke: {
+					color:this.conf.stroke.color,
+					width:this.conf.stroke.width
+				}, 
+				edge: {
+					color:this.conf.edge.color, 
+					width:this.conf.edge.color
+				},
+				radial: {
+					vertex: {
+						color:this.conf.radial.vertex.color,
+						width:this.conf.radial.vertex.width
+					},
+					side: {
+						color:this.conf.radial.side.color,
+						width:this.conf.radial.side.width
+					},
+				}  // End radial
+			}; // End conf
+		} // End if (shallowCopy)
 
-    position = {x:1000+canvas.width/2, y:canvas.height/2};
-    scale    = {x:100, y:100};
-    color    = 0xff69A9;
-    conf     = {
-                    stroke: {color:0x00, width:0.01}, 
-                    edge  : {color:0xdd0000, width:0.2},
-                    radial: {
-                             vertex:{color:0xffcd00, width:0.18},
-                             side  :{color:0xffcd00, width:0.3}
-                            }
-                   };
-    gridconf = {
-            position : { x: 50, y: 60 },
-            scale    : { x: 30, y: 30 },
-            size     : { w: 10, h: 5 },
-        }
-    gridconf.cell = conf;
-    cell2 = new HexCell(position, scale, color, conf);
-    cell2.edges             = [];
-    cell2.radialVertexLines = [1, 4];
-    cell2.radialSideLines   = [0, 3];
-    cell2.draw();
-    // cell2.renderWith(renderer);
-     
-    position = {x:-1000+canvas.width/2, y:canvas.height/2};
-    scale    = {x:100, y:100};
-    color    = 0x009949;
-    conf     = {
-                    stroke: {color:0x00, width:0.01}, 
-                    edge  : {color:0xdd0000, width:0.2},
-                    radial: {
-                             vertex:{color:0xffcd00, width:0.18},
-                             side  :{color:0xffcd00, width:0.3}
-                            }
-                   };
-    gridconf = {
-            position : { x: 50, y: 60 },
-            scale    : { x: 30, y: 30 },
-            size     : { w: 10, h: 5 },
-        }
-    gridconf.cell = conf;
-    cell3 = new HexCell(position, scale, color, conf);
-    cell3.edges             = [];
-    cell3.radialVertexLines = [1, 4];
-    cell3.radialSideLines   = [0, 3];
-    cell3.draw();
-    
-    container.addChild(cell._graphics);
-    container.addChild(cell2._graphics);
-    container.addChild(cell3._graphics);
-    renderer.render(container);
+		return new HexCell(position, scale, color, conf);
+	};
 
-    
-    // function randomiseIconCell(offsetCoord, linearCoord, cell) {
-    //     function randomInt(min, max) {
-    //         return min + Math.floor(Math.random()*(max-min+1))
-    //     }
-    //     function randomArray(min, max, nElem) { 
-    //         a = [];
-    //         while (a.length < nElem) {
-    //             var n = randomInt(min, max);
-    //             for (var i = a.length - 1; i >= 0; i--) {
-    //                 if (a[i]==n) {continue;}
-    //             };
-    //             a.push(n);
-    //         };
-    //         return a;
-    //     }
+	// TODO: Paint an example icon.
+	var position = {x:canvas.width/2, y:canvas.height/2};
+	var scale    = {x:100, y:100};
+	var color    = 0x0069A9;
+	var conf     = {
+					stroke: {color:0x587058, width:0.0}, 
+					edge  : {color:0xdd2222, width:0.2},
+					radial: {
+							 vertex:{color:0xffcd00, width:0.18},
+							 side  :{color:0xffcd00, width:0.3}
+							}
+				   };
+	var cellFactory = new CellFactory(position, scale, color, conf);
+	var cell  = cellFactory.newCell();
+	cellFactory.color = 0x605989
+	var cell2 = cellFactory.newCell();
+	cellFactory.color = 0x6900A9
+	var cell3 = cellFactory.newCell();
 
-    //     cell.color = color;
 
-    //     nEdgeLines = randomInt(0,5);
-    //     nSideLines = randomInt(0,5);
-    //     nVertLines = randomInt(0,5);
-    //     edges      = randomArray(0, 5, nEdgeLines);
-    //     sides      = randomArray(0, 5, nSideLines);
-    //     verts      = randomArray(0, 5, nVertLines);
+	cell.edges             = [];
+	cell.radialVertexLines = [1, 4];
+	cell.radialSideLines   = [0, 3];
+	cell.draw();
 
-    //     cell.edges             = edges;
-    //     cell.radialVertexLines = verts;
-    //     cell.radialSideLines   = sides;
+	// cell2.edges             = [];
+	// cell2.radialVertexLines = [1, 4];
+	// cell2.radialSideLines   = [0, 3];
+	// cell2.draw();
 
-    //     var x = Math.random();
-    //     var y = Math.random();
-    //     var z = Math.random();
-    //     cell.radialVertexLineWidth = x;
-    //     cell.radialSideLineWidth   = y;
-    //     cell.edgeWidth             = z;
-    // }
-    
-    // grid = new HexGrid(gridconf, null);
-    // grid.applyToCells(randomiseIconCell)
-    // grid.draw();
-    // grid.renderWith(renderer);
+	// cell3.edges             = [];
+	// cell3.radialVertexLines = [1, 4];
+	// cell3.radialSideLines   = [0, 3];
+	// cell3.draw();
+	
+	container.addChild(cell._graphics);
+	// container.addChild(cell2._graphics);
+	// container.addChild(cell3._graphics);
 
-    function WiggleCellAnimationFactory (cell, duration, span, isRepeating) {
+	var mt_rng = new MersenneTwister(1337);
+	var root_seed = mt_rng.int();
+	var currentIconIndex = 0;
 
-        var startTime = performance.now();
-        var endTime   = startTime + duration;
-        var startX    = cell._graphics.position.x;
+	function randomiseIconCell(cell, index) {
+		mt_rng.seed(root_seed+index);
 
-        var temp;
-        var endX = startX + span;
+		console.log('Randomise Icon', index);
 
-        var wiggle = function (dt, currentTime) {
+		function gaussian(mean, deviation) {
+			// Wikipedia - Box-Muller transform
+			var u1 = mt_rng.rnd();
+			var u2 = mt_rng.rnd();
+			var z0 = Math.sqrt(-2.0*Math.log(u1))*Math.cos(6.28318530718*u2);
+			var z1 = Math.sqrt(-2.0*Math.log(u1))*Math.sin(6.28318530718*u2);
 
-            var t = currentTime - startTime;
+			return z0*deviation + mean;
+		}
 
-            var x = HexMath.easeInOutQuad(t, startX, span, duration);
-            cell._graphics.position.x = x;
-            renderer.render(container); // TODO: abstract rendering of scene!
+		function randomInt(min, max) {
+			return min + Math.floor(mt_rng.rndHiRes()*(max-min+1))
+		}
+		function randomArray(min, max, nElem) { 
+			a = [];
+			while (a.length < nElem) {
+				var n = randomInt(min, max);
+				for (var i = a.length - 1; i >= 0; i--) {
+					if (a[i]==n) {continue;}
+				};
+				a.push(n);
+			};
+			return a;
+		}
 
-            // Repeating function
-            if (isRepeating && t > duration) {
-                startTime = performance.now();
-                endTime   = startTime + duration;
+		function shuffle(array) {
+			// Knuth's unbiased shuffle
+			// http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+			var currentIndex = array.length, temporaryValue, randomIndex ;
 
-                temp   = startX;
-                startX = endX;
-                endX   = temp;
+			// While there remain elements to shuffle...
+			while (0 !== currentIndex) {
 
-                span     *= -1;
-            }
-            
-            if (!isRepeating && t>duration) return true;
+			// Pick a remaining element...
+				randomIndex = Math.floor(mt_rng.rnd() * currentIndex);
+				currentIndex -= 1;
 
-            return false;
-        }
-        return wiggle;
-    }
+				// And swap it with the current element.
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
 
-    var animationSystem = new HexAnimationSystem.AnimationSystem();
-    // animationSystem.add(WiggleCellAnimationFactory(cell, 2000, 200));
-    
-    // Kick-start the animation
-    animationSystem.animate();
+			return array;
+		}
 
-    var mc = Hammer(renderer.view);
-    mc.on('swipe', function (ev) {
-        var dur  = 850;
-        var dist = 1000;
-        if (ev.angle > 135 || ev.angle < -135) {
-            animationSystem.add(WiggleCellAnimationFactory(cell , dur, -dist));
-            animationSystem.add(WiggleCellAnimationFactory(cell2, dur, -dist));
-            animationSystem.add(WiggleCellAnimationFactory(cell3, dur, -dist));
-        } else if (ev.angle < 45 || ev.angle > -45) {
-            animationSystem.add(WiggleCellAnimationFactory(cell , dur,  dist));
-            animationSystem.add(WiggleCellAnimationFactory(cell2, dur,  dist));
-            animationSystem.add(WiggleCellAnimationFactory(cell3, dur,  dist));
-        }
-        // console.log(ev)
-    })
+		// cell.color = mt_rng.int();
 
-    // document.body.ontouchstart = function(ev) {
-    //     console.log('test')
-    // };
-    // renderer.view.onmousemove = function(ev) {
-    //     isCellDirty = true;
+		nElements = randomInt(0,15);
+		elem1 = randomInt(0,Math.min(5,nElements));
+		elem2 = randomInt(0,Math.min(5,nElements-elem1));
+		elem3 = randomInt(0,Math.min(5,nElements-elem2-elem1));
+		var elems = [elem1, elem2, elem3];
+		shuffle(elems);
 
-    //     // console.log(ev);
-    //     updateCellAnimation(cell, ev.offsetX)
-    // };
-    
-    </script>
+		edges      = randomArray(0, 5, elems[0]);
+		sides      = randomArray(0, 5, elems[1]);
+		verts      = randomArray(0, 5, elems[2]);
+
+		cell.edges             = edges;
+		cell.radialVertexLines = verts;
+		cell.radialSideLines   = sides;
+
+		// cell.radialVertexLineColor = mt_rng.int();
+		// cell.radialSideLineColor = mt_rng.int();
+		// cell.edgeColor = mt_rng.int();
+
+		cell.radialVertexLineWidth = gaussian(0.125,0.01);
+		cell.radialSideLineWidth   = gaussian(0.125,0.01);
+		cell.edgeWidth             = gaussian(0.125,0.1);
+		cell.strokeWidth           = gaussian(0.01,0.1);
+
+		cell.draw();
+	}
+	
+	// grid = new HexGrid(gridconf, null);
+	// grid.applyToCells(randomiseIconCell)
+	// grid.draw();
+	// grid.renderWith(renderer);
+
+	function WiggleCellAnimationFactory (cell, duration, targetX, isRepeating) {
+
+		var startTime = performance.now();
+		var endTime   = startTime + duration;
+		var startX    = cell._graphics.position.x;
+
+		var temp;
+		var span = targetX - startX;
+
+		var wiggle = function (dt, currentTime) {
+
+			var t = currentTime - startTime;
+
+			var x = HexMath.easeInOutQuad(t, startX, span, duration);
+			cell._graphics.position.x = x;
+
+			// Repeating function
+			if (isRepeating && t > duration) {
+				startTime = performance.now();
+				endTime   = startTime + duration;
+
+				temp    = startX;
+				startX  = targetX;
+				targetX = temp;
+
+				span     *= -1;
+			}
+			
+			if (!isRepeating && t>duration) return true;
+
+			return false;
+		};
+		return wiggle;
+	}
+
+	function PanCellAnimationFactory (cell) {
+		var isDone   = false;
+		var isEnding = false;
+		var endingAnimation = null;
+		this.cancel = function (duration) {
+			if (duration <= 0) {
+				isDone = true;
+				return;
+			} else {
+				// TODO: Abstract with chaining.                
+				endingAnimation = WiggleCellAnimationFactory(cell, duration, 250);
+				isEnding = true;
+				return;
+			}
+		};
+
+		var x  = cell._graphics.position.x;
+		var dx = 0;
+		this.setdx = function (newdx) {dx = newdx;}
+
+		this.animation = function (dt, currentTime) {
+			// console.log(cell._graphics.position.x);
+			if (isDone) return isDone;
+			// TODO: Add starting phase?
+			if (isEnding) {
+				return endingAnimation(dt, currentTime)
+			} else {
+				cell._graphics.position.x = x + dx;
+				return isDone;
+			};
+		};
+	}
+
+	var renderCallback = function () {
+		renderer.render(container);
+	}
+	var animationSystem = new HexAnimationSystem.AnimationSystem(renderCallback);
+	// animationSystem.add(WiggleCellAnimationFactory(cell, 2000, 200));
+	
+	// Kick-start the animation
+	animationSystem.animate();
+	randomiseIconCell(cell, 0);
+
+	// === Hammer time ===
+	var swipeOptions = {
+		threshold: 10,
+		direction: Hammer.DIRECTION_HORIZONTAL,
+		velocity : 0.55,
+	}
+	var swipe = new Hammer.Swipe(swipeOptions);
+
+	var panOptions = {
+		threshold: 1,
+		direction: Hammer.DIRECTION_HORIZONTAL,
+	}
+	var pan = new Hammer.Pan(panOptions);
+
+	swipe.recognizeWith(pan);
+	// swipe.recognizeWith(pan);
+	// pan.requireFailure(swipe);
+
+	var mc = new Hammer.Manager(renderer.view);
+	mc.add(swipe);
+	mc.add(pan);
+	
+
+	mc.on('swipe', function (ev) {
+		console.log("Sch-wipe!");
+		// currentPanAnimation.cancel(0);
+		var dur  = 250;
+		var dist = 1000;
+		if (ev.angle > 135 || ev.angle < -135) {
+			// animationSystem.add(WiggleCellAnimationFactory(cell , dur, -0));
+			// animationSystem.add(WiggleCellAnimationFactory(cell2, dur, -dist));
+			// animationSystem.add(WiggleCellAnimationFactory(cell3, dur, -dist));
+			
+			currentIconIndex -= 1;
+		} else if (ev.angle < 45 || ev.angle > -45) {
+			// animationSystem.add(WiggleCellAnimationFactory(cell , dur,  500));
+			// animationSystem.add(WiggleCellAnimationFactory(cell2, dur,  dist));
+			// animationSystem.add(WiggleCellAnimationFactory(cell3, dur,  dist));
+			
+			currentIconIndex += 1;
+		}
+
+		randomiseIconCell(cell, currentIconIndex);
+		// console.log(ev)
+	});
+
+	var currentPanAnimation = null;
+	mc.on('panstart', function (ev) {
+		console.log("Peter Pan! (Start)");
+		// Capture position of cell
+		currentPanAnimation = new PanCellAnimationFactory(cell, 0);
+		animationSystem.add(currentPanAnimation.animation);
+	});
+	mc.on('panmove', function (ev) {
+		console.log("Peter Pan! (Move)");
+		// console.log(ev.deltaX)
+		currentPanAnimation.setdx(ev.deltaX);
+	});
+	mc.on('panend', function (ev) {
+		console.log("Peter Pan (End)!");
+		var dur  = 250;
+		currentPanAnimation.cancel(dur);
+	});
+
+	// document.body.ontouchstart = function(ev) {
+	//     console.log('test')
+	// };
+	// renderer.view.onmousemove = function(ev) {
+	//     isCellDirty = true;
+
+	//     // console.log(ev);
+	//     updateCellAnimation(cell, ev.offsetX)
+	// };
+	
+	</script>
 </body>
 </html>
